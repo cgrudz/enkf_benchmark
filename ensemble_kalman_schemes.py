@@ -134,7 +134,7 @@ def stoch_transform(ens, H, obs, obs_cov):
     # create the ensemble transform matrix
     Y_t = A_t @ H.transpose()
     C = Y_t.transpose() @ Y_t + obs_cov
-    T = np.eye(N_ens) + Y_t @ np.linalg.inv(C) @ (obs_ens - H @ ens)
+    T = np.eye(N_ens) + Y_t @ np.linalg.inv(C) @ (obs_ens - H @ ens) / np.sqrt(N_ens - 1)
     
     return T
 
