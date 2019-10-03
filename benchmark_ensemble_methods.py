@@ -36,7 +36,7 @@ def experiment(args):
     init = np.random.multivariate_normal(init, np.eye(sys_dim), size=N_ens).transpose()
     X_stoch = copy.copy(init)
     X_deter = copy.copy(init)
-    #X_trans = copy.copy(init)
+    X_trans = copy.copy(init)
 
 
     # define the observation sequence
@@ -58,10 +58,10 @@ def experiment(args):
     deter_fore_spread = np.zeros(nanl)
     deter_anal_spread = np.zeros(nanl)
     
-    #trans_fore_rmse = np.zeros(nanl)
-    #trans_anal_rmse = np.zeros(nanl)
-    #trans_fore_spread = np.zeros(nanl)
-    #trans_anal_spread = np.zeros(nanl)
+    trans_fore_rmse = np.zeros(nanl)
+    trans_anal_rmse = np.zeros(nanl)
+    trans_fore_spread = np.zeros(nanl)
+    trans_anal_spread = np.zeros(nanl)
 
     for i in range(nanl):
         # loop over the analysis cycles
@@ -69,22 +69,22 @@ def experiment(args):
             # loop over the integration steps between observations
             X_stoch = l96_rk4_stepV(X_stoch, h, f)
             X_deter = l96_rk4_stepV(X_deter, h, f)
-            #X_trans = l96_rk4_stepV(X_trans, h, f)
+            X_trans = l96_rk4_stepV(X_trans, h, f)
 
         # compute the forecast statistics
         stoch_fore_rmse[i], stoch_fore_spread[i] = analyze_ensemble(X_stoch, truth[:, i])
         deter_fore_rmse[i], deter_fore_spread[i] = analyze_ensemble(X_deter, truth[:, i])
-        #trans_fore_rmse[i], trans_fore_spread[i] = analyze_ensemble(X_trans, truth[:, i])
+        trans_fore_rmse[i], trans_fore_spread[i] = analyze_ensemble(X_trans, truth[:, i])
         
         # after the forecast step, perform assimilation of the observation
         X_stoch = enkf_stoch_analysis(X_stoch, H, obs[:, i], obs_cov)
         X_deter = enkf_deter_analysis(X_deter, H, obs[:, i], obs_cov)
-        #X_trans = enkf_trans_analysis(X_trans, H, obs[:, i], obs_cov)
+        X_trans = enkf_trans_analysis(X_trans, H, obs[:, i], obs_cov)
 
         # compute the analysis statistics
         stoch_anal_rmse[i], stoch_anal_spread[i] = analyze_ensemble(X_stoch, truth[:, i])
         deter_anal_rmse[i], deter_anal_spread[i] = analyze_ensemble(X_deter, truth[:, i])
-        #trans_anal_rmse[i], trans_anal_spread[i] = analyze_ensemble(X_trans, truth[:, i])
+        trans_anal_rmse[i], trans_anal_spread[i] = analyze_ensemble(X_trans, truth[:, i])
        
 
     data = {
@@ -96,10 +96,10 @@ def experiment(args):
             'deter_anal_rmse': deter_anal_rmse,
             'deter_fore_spread': deter_fore_spread,
             'deter_anal_spread': deter_anal_spread,
-            #'trans_fore_rmse': trans_fore_rmse,
-            #'trans_anal_rmse': trans_anal_rmse,
-            #'trans_fore_spread': trans_fore_spread,
-            #'trans_anal_spread': trans_anal_spread,
+            'trans_fore_rmse': trans_fore_rmse,
+            'trans_anal_rmse': trans_anal_rmse,
+            'trans_fore_spread': trans_fore_spread,
+            'trans_anal_spread': trans_anal_spread,
             'params' : [obs_un, obs_dim, N_ens, h]
             }
 
