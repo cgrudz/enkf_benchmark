@@ -1,6 +1,6 @@
 import numpy as np
 from l96 import l96_rk4_stepV
-from ensemble_kalman_schemes import analyze_ensemble, enkf_stoch_analysis, enkf_deter_analysis, enkf_trans_analysis
+from ensemble_kalman_schemes import analyze_ensemble, enkf_stoch_analysis, enkf_deter_analysis, ienkf_analysis, ietlm_analysis 
 import pickle
 import copy
 import ipdb
@@ -24,7 +24,7 @@ def experiment(args):
     f_steps = int(tanl / h)
 
     # number of analyses
-    nanl = 5000 
+    nanl = 1000 
 
     # set seed 
     np.random.seed(seed)
@@ -36,7 +36,8 @@ def experiment(args):
     init = np.random.multivariate_normal(init, np.eye(sys_dim), size=N_ens).transpose()
     X_stoch = copy.copy(init)
     X_deter = copy.copy(init)
-    X_trans = copy.copy(init)
+    X_ienkf = copy.copy(init)
+    X_ietlm = copy.copy(init)
 
 
     # define the observation sequence
@@ -58,34 +59,49 @@ def experiment(args):
     deter_fore_spread = np.zeros(nanl)
     deter_anal_spread = np.zeros(nanl)
     
-    trans_fore_rmse = np.zeros(nanl)
-    trans_anal_rmse = np.zeros(nanl)
-    trans_fore_spread = np.zeros(nanl)
-    trans_anal_spread = np.zeros(nanl)
-
+    ienkf_fore_rmse = np.zeros(nanl)
+    ienkf_anal_rmse = np.zeros(nanl)
+    ienkf_fore_spread = np.zeros(nanl)
+    ienkf_anal_spread = np.zeros(nanl)
+    
+    ietlm_fore_rmse = np.zeros(nanl)
+    ietlm_anal_rmse = np.zeros(nanl)
+    ietlm_fore_spread = np.zeros(nanl)
+    ietlm_anal_spread = np.zeros(nanl)
+    
     for i in range(nanl):
         # loop over the analysis cycles
+        
+        # keep the initial conditions of the smoothers for later, as this is only to generate
+        # forecat statistics
+        X_ienkf_0 = copy.copy(X_ienkf)
+        X_ietlm_0 = copy.copy(X_ietlm)
+
         for j in range(f_steps):
             # loop over the integration steps between observations
             X_stoch = l96_rk4_stepV(X_stoch, h, f)
             X_deter = l96_rk4_stepV(X_deter, h, f)
-            X_trans = l96_rk4_stepV(X_trans, h, f)
+            X_ienkf = l96_rk4_stepV(X_ienkf, h, f)
+            X_ietlm = l96_rk4_stepV(X_ietlm, h, f)
 
         # compute the forecast statistics
         stoch_fore_rmse[i], stoch_fore_spread[i] = analyze_ensemble(X_stoch, truth[:, i])
         deter_fore_rmse[i], deter_fore_spread[i] = analyze_ensemble(X_deter, truth[:, i])
-        trans_fore_rmse[i], trans_fore_spread[i] = analyze_ensemble(X_trans, truth[:, i])
-        
+        ienkf_fore_rmse[i], ienkf_fore_spread[i] = analyze_ensemble(X_ienkf, truth[:, i])
+        ietlm_fore_rmse[i], ietlm_fore_spread[i] = analyze_ensemble(X_ietlm, truth[:, i])
+
         # after the forecast step, perform assimilation of the observation
         X_stoch = enkf_stoch_analysis(X_stoch, H, obs[:, i], obs_cov)
         X_deter = enkf_deter_analysis(X_deter, H, obs[:, i], obs_cov)
-        X_trans = enkf_trans_analysis(X_trans, H, obs[:, i], obs_cov)
+        
+        X_ienkf = ienkf_analysis(X_ienkf_0, H, obs[:, i], obs_cov, f_steps, f, h)
+        X_ietlm = ietlm_analysis(X_ietlm_0, H, obs[:, i], obs_cov, f_steps, f, h)
 
         # compute the analysis statistics
         stoch_anal_rmse[i], stoch_anal_spread[i] = analyze_ensemble(X_stoch, truth[:, i])
         deter_anal_rmse[i], deter_anal_spread[i] = analyze_ensemble(X_deter, truth[:, i])
-        trans_anal_rmse[i], trans_anal_spread[i] = analyze_ensemble(X_trans, truth[:, i])
-       
+        ienkf_anal_rmse[i], ienkf_anal_spread[i] = analyze_ensemble(X_ienkf, truth[:, i])
+        ietlm_anal_rmse[i], ietlm_anal_spread[i] = analyze_ensemble(X_ietlm, truth[:, i])
 
     data = {
             'stoch_fore_rmse': stoch_fore_rmse,
@@ -96,10 +112,14 @@ def experiment(args):
             'deter_anal_rmse': deter_anal_rmse,
             'deter_fore_spread': deter_fore_spread,
             'deter_anal_spread': deter_anal_spread,
-            'trans_fore_rmse': trans_fore_rmse,
-            'trans_anal_rmse': trans_anal_rmse,
-            'trans_fore_spread': trans_fore_spread,
-            'trans_anal_spread': trans_anal_spread,
+            'ienkf_fore_rmse': ienkf_fore_rmse,
+            'ienkf_anal_rmse': ienkf_anal_rmse,
+            'ienkf_fore_spread': ienkf_fore_spread,
+            'ienkf_anal_spread': ienkf_anal_spread,
+            'ietlm_fore_rmse': ietlm_fore_rmse,
+            'ietlm_anal_rmse': ietlm_anal_rmse,
+            'ietlm_fore_spread': ietlm_fore_spread,
+            'ietlm_anal_spread': ietlm_anal_spread,
             'params' : [obs_un, obs_dim, N_ens, h]
             }
 
