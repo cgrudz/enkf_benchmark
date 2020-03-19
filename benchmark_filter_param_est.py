@@ -138,12 +138,12 @@ def experiment(args):
             }
     
     fname = './data/' + method.__name__ + '/' + method.__name__ + '_filter_l96_param_benchmark_seed_' +\
-            str(seed).zfill(2) + '_diffusion_' + str(diffusion).zfill(3) + '_sys_dim_' + str(sys_dim) +\
-            '_obs_dim_' + str(obs_dim) + '_obs_un_' + str(obs_un).zfill(3) + '_param_err_' + str(param_err) +\
-            '_param_wlk_' + str(param_wlk).zfill(3) +\
+            str(seed).zfill(2) + '_diffusion_' + str(diffusion).ljust(4, '0') + '_sys_dim_' + str(sys_dim) +\
+            '_obs_dim_' + str(obs_dim) + '_obs_un_' + str(obs_un).ljust(4, '0') + '_param_err_' + str(param_err).ljust(4, '0') +\
+            '_param_wlk_' + str(param_wlk).ljust(4, '0') +\
             '_nanl_' + str(nanl).zfill(3) + '_tanl_' + str(tanl).zfill(3) + \
-            '_N_ens_' + str(N_ens).zfill(3) + '_state_inflation_' + str(np.around(state_infl, 2)).zfill(4) +\
-            '_param_infl_' + str(np.around(param_infl, 2)) + '.txt'
+            '_N_ens_' + str(N_ens).zfill(3) + '_state_inflation_' + str(np.around(state_infl, 2)).ljust(4, '0') +\
+            '_param_infl_' + str(np.around(param_infl, 2)).ljust(4, '0') + '.txt'
 
     f = open(fname, 'wb')
     pickle.dump(data, f)
@@ -158,7 +158,7 @@ fname = './data/timeseries_obs/timeseries_l96_seed_0_rk4_step_sys_dim_40_h_0.01_
 
 
 # [time_series, analysis, seed, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl] = args
-experiment([fname, ienkf, 0, 1.0, 40, 0.1, 0.01, 40, 1.04, 1.03])
+experiment([fname, ienkf, 0, 1.0, 40, 0.1, 0.01, 40, 1.1, 1.2])
 
 
 ### FUNCTIONALIZED EXPERIMENT CALL OVER PARAMETER MAP
