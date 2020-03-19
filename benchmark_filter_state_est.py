@@ -96,20 +96,24 @@ def experiment(args):
             'anal_rmse': anal_rmse,
             'fore_spread': fore_spread,
             'anal_spread': anal_spread,
+            'method':method.__name__,
             'seed' : seed, 
-            'obs_un': obs_un,
+            'diffusion': diffusion,
+            'sys_dim': sys_dim,
             'obs_dim': obs_dim, 
-            'N_ens': N_ens, 
-            'state_infl': np.around(infl, 2),
+            'obs_un': obs_un,
+            'nanl': nanl,
+            'tanl':tanl,
             'h': h,
-            'diffusion': diffusion
+            'N_ens': N_ens, 
+            'state_infl': np.around(infl, 2)
             }
     
     fname = './data/' + method.__name__ + '/' + method.__name__ + '_filter_l96_state_benchmark_seed_' +\
             str(seed).zfill(2) + '_diffusion_' + str(diffusion).ljust(4, '0') + '_sys_dim_' + str(sys_dim) +\
-            '_obs_dim_' + str(obs_dim) + '_obs_un_' + \
-            str(obs_un).ljust(4, '0') + '_nanl_' + str(nanl).zfill(3) + '_tanl_' + str(tanl).zfill(3) + \
-            '_N_ens_' + str(N_ens).zfill(3) + '_inflation_' + str(np.around(infl, 2)).ljust(4, '0') + '.txt'
+            '_obs_dim_' + str(obs_dim) + '_obs_un_' + str(obs_un).ljust(4, '0') + '_nanl_' + str(nanl).zfill(3) +\
+            '_tanl_' + str(tanl).zfill(3) + '_h_' + str(h).ljust(4, '0') +\
+            '_N_ens_' + str(N_ens).zfill(3) + '_state_inflation_' + str(np.around(infl, 2)).ljust(4, '0') + '.txt'
 
     f = open(fname, 'wb')
     pickle.dump(data, f)
@@ -124,7 +128,7 @@ fname = './data/timeseries_obs/timeseries_l96_seed_0_l96s_tay2_step_sys_dim_40_h
 
 
 # [time_series, analysis, seed, obs_un, obs_dim, N_ens, infl] = args
-experiment([fname, ienkf, 0, 1.0, 40, 14, 1.1])
+experiment([fname, enkf, 0, 1.0, 40, 14, 1.1])
 
 
 ### FUNCTIONALIZED EXPERIMENT CALL OVER PARAMETER MAP

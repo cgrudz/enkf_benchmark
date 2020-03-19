@@ -20,7 +20,7 @@ fnames = ['./data/timeseries_obs/timeseries_l96_seed_0_rk4_step_sys_dim_40_h_0.0
 
 analysis = [ienkf]
 seed = 0
-obs_un = 1
+obs_un = 1.0
 obs_dim = 40
 N_ens = range(14, 42, 3)
 inflation = np.linspace(1.0, 1.2, 21)

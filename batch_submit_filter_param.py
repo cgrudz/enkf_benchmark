@@ -20,7 +20,7 @@ fnames = ['./data/timeseries_obs/timeseries_l96_seed_0_rk4_step_sys_dim_40_h_0.0
 
 analysis = [enkf, etkf, enks, etks, ienkf]
 seed = 0
-obs_un = 1
+obs_un = 1.0
 obs_dim = 40
 param_err = 0.2
 param_wlk = [0, 0.01]

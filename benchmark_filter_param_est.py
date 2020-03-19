@@ -126,22 +126,26 @@ def experiment(args):
             'state_fore_spread': state_fore_spread,
             'state_anal_spread': state_anal_spread,
             'param_anal_spread': param_anal_spread,
+            'method': method.__name__,
             'seed' : seed, 
-            'obs_un': obs_un,
+            'diffusion': diffusion,
+            'sys_dim': sys_dim,
             'obs_dim': obs_dim, 
+            'obs_un': obs_un,
             'param_err': param_err,
+            'nanl': nanl,
+            'tanl': tanl,
+            'h': h,
             'N_ens': N_ens, 
             'state_infl': np.around(state_infl, 2),
-            'param_infl': np.around(param_infl, 2),
-            'h': h,
-            'diffusion': diffusion
+            'param_infl': np.around(param_infl, 2)
             }
     
     fname = './data/' + method.__name__ + '/' + method.__name__ + '_filter_l96_param_benchmark_seed_' +\
             str(seed).zfill(2) + '_diffusion_' + str(diffusion).ljust(4, '0') + '_sys_dim_' + str(sys_dim) +\
             '_obs_dim_' + str(obs_dim) + '_obs_un_' + str(obs_un).ljust(4, '0') + '_param_err_' + str(param_err).ljust(4, '0') +\
             '_param_wlk_' + str(param_wlk).ljust(4, '0') +\
-            '_nanl_' + str(nanl).zfill(3) + '_tanl_' + str(tanl).zfill(3) + \
+            '_nanl_' + str(nanl).zfill(3) + '_tanl_' + str(tanl).zfill(3) + '_h_' + str(h)ljust(4, '0') + \
             '_N_ens_' + str(N_ens).zfill(3) + '_state_inflation_' + str(np.around(state_infl, 2)).ljust(4, '0') +\
             '_param_infl_' + str(np.around(param_infl, 2)).ljust(4, '0') + '.txt'
 
