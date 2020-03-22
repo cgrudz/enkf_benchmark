@@ -12,7 +12,6 @@ exps = []
 
 ## Arguments of experiment are as follows
 ## [time_series, analysis, seed, obs_un, obs_dim, N_ens, infl] = args
-exps = []
 
 #fnames = sorted(glob.glob('./data/timeseries_obs/*'))
 fnames = ['./data/timeseries_obs/timeseries_l96_seed_0_rk4_step_sys_dim_40_h_0.01_diffusion_000_nanl_50000_spin_2500_anal_int_0.05.txt',

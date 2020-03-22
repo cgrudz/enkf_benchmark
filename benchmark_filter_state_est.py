@@ -1,7 +1,7 @@
 import numpy as np
 from l96 import rk4_step as step_model, l96 as dx_dt
 from ensemble_kalman_schemes import analyze_ensemble
-from ensemble_kalman_schemes import enkf, etkf, enks, etks, ienkf 
+from ensemble_kalman_schemes import enkf, etkf, ienkf, enks, etks 
 import pickle
 import copy
 import sys
@@ -30,14 +30,16 @@ def experiment(args):
     # number of discrete forecast steps
     f_steps = int(tanl / h)
 
-    # define kwargs
+    # define kwargs for lag-1, shift-1 smoothing
     kwargs = {
               'dx_dt': dx_dt,
               'f_steps': f_steps,
               'step_model': step_model, 
               'dx_params': [f],
               'h': h,
-              'diffusion': diffusion
+              'diffusion': diffusion,
+              'shift': 1,
+              'mda': False
              }
 
     # number of analyses
@@ -73,7 +75,7 @@ def experiment(args):
     anal_spread = np.zeros(nanl)
 
     for i in range(nanl):
-        # copy the initial ensemble for lag-1 smoothing
+        # copy the initial ensemble for lag-1, shift-1 smoothing
         ens_0 = copy.copy(ens)
         kwargs['ens_0'] = ens_0
 
@@ -90,6 +92,8 @@ def experiment(args):
 
         # compute the analysis statistics
         anal_rmse[i], anal_spread[i] = analyze_ensemble(ens, truth[:, i])
+        ipdb.set_trace()
+        print(anal_rmse[i], anal_spread[i])
 
     data = {
             'fore_rmse': fore_rmse,
@@ -128,7 +132,7 @@ fname = './data/timeseries_obs/timeseries_l96_seed_0_l96s_tay2_step_sys_dim_40_h
 
 
 # [time_series, analysis, seed, obs_un, obs_dim, N_ens, infl] = args
-experiment([fname, enkf, 0, 1.0, 40, 14, 1.1])
+experiment([fname, enks, 0, 1.0, 40, 41, 1.04])
 
 
 ### FUNCTIONALIZED EXPERIMENT CALL OVER PARAMETER MAP

@@ -107,6 +107,8 @@ def experiment(args):
         # after the forecast step, perform assimilation of the observation
         analysis = method(ens, H_ens, obs[:, [i]], obs_cov, state_infl, **kwargs)
         ens = analysis['ens']
+        post = analysis['post']
+        fore = analysis['fore']
 
         X_ens = ens[:state_dim, :]
         param_ens = ens[state_dim:, :]
@@ -130,6 +132,7 @@ def experiment(args):
             'seed' : seed, 
             'diffusion': diffusion,
             'sys_dim': sys_dim,
+            'state_dim': state_dim,
             'obs_dim': obs_dim, 
             'obs_un': obs_un,
             'param_err': param_err,
@@ -142,10 +145,10 @@ def experiment(args):
             }
     
     fname = './data/' + method.__name__ + '/' + method.__name__ + '_filter_l96_param_benchmark_seed_' +\
-            str(seed).zfill(2) + '_diffusion_' + str(diffusion).ljust(4, '0') + '_sys_dim_' + str(sys_dim) +\
+            str(seed).zfill(2) + '_diffusion_' + str(diffusion).ljust(4, '0') + '_sys_dim_' + str(sys_dim) + '_state_dim_' + str(state_dim)+\
             '_obs_dim_' + str(obs_dim) + '_obs_un_' + str(obs_un).ljust(4, '0') + '_param_err_' + str(param_err).ljust(4, '0') +\
             '_param_wlk_' + str(param_wlk).ljust(4, '0') +\
-            '_nanl_' + str(nanl).zfill(3) + '_tanl_' + str(tanl).zfill(3) + '_h_' + str(h)ljust(4, '0') + \
+            '_nanl_' + str(nanl).zfill(3) + '_tanl_' + str(tanl).zfill(3) + '_h_' + str(h).ljust(4, '0') + \
             '_N_ens_' + str(N_ens).zfill(3) + '_state_inflation_' + str(np.around(state_infl, 2)).ljust(4, '0') +\
             '_param_infl_' + str(np.around(param_infl, 2)).ljust(4, '0') + '.txt'
 
@@ -167,7 +170,7 @@ experiment([fname, ienkf, 0, 1.0, 40, 0.1, 0.01, 40, 1.1, 1.2])
 
 ### FUNCTIONALIZED EXPERIMENT CALL OVER PARAMETER MAP
 #j = int(sys.argv[1])
-#f = open('./data/input_data/benchmark_filter_state.txt', 'rb')
+#f = open('./data/input_data/benchmark_filter_param.txt', 'rb')
 #data = pickle.load(f)
 #args = data[j]
 #f.close()

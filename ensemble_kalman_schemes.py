@@ -261,19 +261,19 @@ def enkf(ens, H, obs, obs_cov, state_infl, **kwargs):
 # EnKS
 
 
-def enks(ens, H, obs, obs_cov, state_infl, **kwargs):
+def enks_lag_1_shift_1(ens, H, obs, obs_cov, state_infl, **kwargs):
 
-    """Lag-l ensemble kalman smoother analysis step
+    """Lag-1, shift-1 ensemble kalman smoother analysis step
 
     Optional keyword argument includes state dimension if there is an extended state including parameters.  In this
     case, a value for the parameter covariance inflation should be included in addition to the state covariance
     inflation."""
     
-    # step 0: infer the ensemble, obs, and state dimensions, and smoothing window,
-    # unpack kwargs
+    # step 0: infer the ensemble, obs, and state dimensions
     [sys_dim, N_ens] = np.shape(ens)
     [obs_dim, lag] = np.shape(obs)
 
+    # unpack kwargs
     f_steps = kwargs['f_steps']
     step_model = kwargs['step_model']
 
@@ -285,9 +285,9 @@ def enks(ens, H, obs, obs_cov, state_infl, **kwargs):
     else:
         state_dim = sys_dim
 
-    # optional lag-1 filtering - an initial ensemble value should replace
+    # if not batch smoothing, lag!=shift, an initial ensemble value should replace
     # the ens argument in this case
-    if 'ens_0' in kwargs:
+    if shift != lag:
         ens = kwargs['ens_0']
     
     # step 1: create storage for the posterior over the smoothing window
@@ -336,6 +336,102 @@ def enks(ens, H, obs, obs_cov, state_infl, **kwargs):
         ens = inflate_param(ens, param_infl, sys_dim, state_dim)
 
     return {'ens': ens, 'post': posterior}
+
+
+########################################################################################################################
+# EnKS
+
+
+def enks(ens, H, obs, obs_cov, state_infl, **kwargs):
+
+    """Lag, shift ensemble kalman smoother analysis step
+
+    Optional keyword argument includes state dimension if there is an extended state including parameters.  In this
+    case, a value for the parameter covariance inflation should be included in addition to the state covariance
+    inflation."""
+    
+    # step 0: infer the ensemble, obs, and state dimensions
+    [sys_dim, N_ens] = np.shape(ens)
+    
+    # observation sequence includes time zero, length lag + 1 
+    [obs_dim, lag] = np.shape(obs)
+    lag -= 1
+
+    # unpack kwargs
+    f_steps = kwargs['f_steps']
+    step_model = kwargs['step_model']
+    shift = kwargs['shift']
+    mda = kwargs['mda']
+    
+    # optional parameter estimation
+    if 'state_dim' in kwargs:
+        state_dim = kwargs['state_dim']
+        param_infl = kwargs['param_infl']
+
+    else:
+        state_dim = sys_dim
+
+    # step 1: create storage for the posterior and forecast over the DAW
+    # only the shift-last and shift-first values are stored as these represent the newly forecasted values and
+    # last-iterate posterior estimate respectively
+    forecast = np.zeros([sys_dim, N_ens, shift])
+    posterior = np.zeros([sys_dim, N_ens, shift])
+    posterior[:, :, 0] = ens
+
+
+    # step 2: forward propagate the ensemble and analyze the observations
+    for l in range(1, lag+1):
+        
+        # step 2a: propagate between observation times
+        for k in range(f_steps):
+            ens = step_model(ens, **kwargs)
+
+        # step 2b: store the forecast to compute ensemble statistics before observations become available
+        if l > (lag - shift):
+            forecast[:, :, l - (lag - shift + 1)] = ens
+
+        # step 2c: perform the filtering step if we do multiple data assimilation (mda=True) or
+        # whenever the lag-forecast steps take us to new observations (l>(lag - shift))
+        if mda or l > (lag - shift):
+            # observation sequence starts from the time of the inital condition
+            # though we do not assimilate time zero observations
+            T = stoch_transform(ens, H, obs[:, l], obs_cov)
+            ens = ens @ T
+
+            # compute multiplicative inflation of state variables
+            ens = inflate_state(ens, state_infl, sys_dim, state_dim)
+
+            # if including an extended state of parameter values,
+            # compute multiplicative inflation of parameter values
+            if state_dim != sys_dim:
+                ens = inflate_param(ens, param_infl, sys_dim, state_dim)
+        
+        #  step 2d: we store the current posterior estimate for times within the initial shift window
+        if l < shift:
+            posterior[:, :, l] = ens
+        
+        # step 2e: find the re-analyzed posterior for the initial shift window
+        # states, if we have an assimilation update
+        if mda or l > (lag - shift):
+            for m in range(shift):
+                posterior[:, :, m] = posterior[:, :, m] @ T
+        
+    # step 3: propagate the posterior initial condition forward to the shift-forward time
+    ens = np.squeeze(posterior[:, :, 0])
+
+    for s in range(shift):
+        for k in range(f_steps):
+            ens = step_model(ens, **kwargs)
+
+    # step 3a: compute multiplicative inflation of state variables
+    ens = inflate_state(ens, state_infl, sys_dim, state_dim)
+
+    # step 3b: if including an extended state of parameter values,
+    # compute multiplicative inflation of parameter values
+    if state_dim != sys_dim:
+        ens = inflate_param(ens, param_infl, sys_dim, state_dim)
+
+    return {'ens': ens, 'post': posterior, 'fore': forecast}
 
 
 ########################################################################################################################
