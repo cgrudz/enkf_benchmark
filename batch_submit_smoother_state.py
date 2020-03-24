@@ -17,13 +17,13 @@ exps = []
 fnames = ['./data/timeseries_obs/timeseries_l96_seed_0_rk4_step_sys_dim_40_h_0.01_diffusion_000_nanl_50000_spin_2500_anal_int_0.05.txt']#,
          # './data/timeseries_obs/timeseries_l96_seed_0_l96s_tay2_step_sys_dim_40_h_0.005_diffusion_0.1_nanl_50000_spin_2500_anal_int_0.05.txt']
 
-analysis = [enks]
+analysis = [etks]
 seed = 0
-lag = range(10)
+lag = range(1, 52, 5)
 # shift will be varied between = lag or = 0
 obs_un = 1.0
 obs_dim = 40
-N_ens = range(14, 42, 3)
+N_ens = range(14, 42)
 inflation = np.linspace(1.0, 1.2, 21)
 
 
@@ -37,7 +37,8 @@ for name in fnames:
                             exps.append([name, anal, seed, l, l, obs_un, obs_dim, ens, infl])
 
                         else:
-                            exps.append([name, anal, seed, l, 1, obs_un, obs_dim, ens, infl])
+                            if l != 1:
+                                exps.append([name, anal, seed, l, 1, obs_un, obs_dim, ens, infl])
 
 f = open('./data/input_data/benchmark_smoother_state.txt','wb')
 pickle.dump(exps, f)

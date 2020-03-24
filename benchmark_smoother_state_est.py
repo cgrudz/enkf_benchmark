@@ -43,7 +43,7 @@ def experiment(args):
              }
 
     # number of analyses
-    nanl = 50 
+    nanl = 450 
 
     # set seed 
     np.random.seed(seed)
@@ -70,9 +70,11 @@ def experiment(args):
 
     # create storage for the forecast and analysis statistics
     fore_rmse = np.zeros(nanl + 2 * lag + 1)
+    filt_rmse = np.zeros(nanl + 2 * lag + 1)
     anal_rmse = np.zeros(nanl + 2 * lag + 1)
     
     fore_spread = np.zeros(nanl + 2 * lag + 1)
+    filt_spread = np.zeros(nanl + 2 * lag + 1)
     anal_spread = np.zeros(nanl + 2 * lag + 1)
 
     # we will run through nanl + shift total analyses but discard the last-shift forecast values and
@@ -83,29 +85,38 @@ def experiment(args):
         analysis = method(ens, H, obs[:, i-lag: i+1], obs_cov, infl, **kwargs)
         ens = analysis['ens']
         fore = analysis['fore']
+        filt = analysis['filt']
         post = analysis['post']
         
         for j in range(shift):
-            # compute the forecast and analysis statistics
+            # compute the forecast, filter and analysis statistics
             # forward index the true state by 1, because the sequence starts at time zero for which there is no
             # observation
-            # indices for the forecast, analysis and truth arrays are in absolute time, not relative
+            # indices for the forecast, filter, analysis and truth arrays are in absolute time, not relative
             fore_rmse[i - shift + j + 1], fore_spread[i - shift + j + 1] = analyze_ensemble(fore[:, :, j], 
+                                                                                    truth[:, i - shift + j + 1])
+            
+            filt_rmse[i - shift + j + 1], filt_spread[i - shift + j + 1] = analyze_ensemble(filt[:, :, j], 
                                                                                     truth[:, i - shift + j + 1])
             
             anal_rmse[i - lag + j], anal_spread[i - lag + j] = analyze_ensemble(post[:, :, j], 
                                                                                 truth[:, i - lag  + j])
 
+
     # cut the statistics so that they align on the same time points
     fore_rmse = fore_rmse[lag: lag + nanl]
     fore_spread = fore_spread[lag: lag + nanl]
+    filt_rmse = filt_rmse[lag: lag + nanl]
+    filt_spread = filt_spread[lag: lag + nanl]
     anal_rmse = anal_rmse[lag: lag + nanl]
     anal_spread = anal_spread[lag: lag + nanl]
 
     data = {
             'fore_rmse': fore_rmse,
+            'filt_rmse': filt_rmse,
             'anal_rmse': anal_rmse,
             'fore_spread': fore_spread,
+            'filt_spread': filt_spread,
             'anal_spread': anal_spread,
             'seed' : seed, 
             'diffusion': diffusion,
@@ -125,7 +136,7 @@ def experiment(args):
             str(seed).zfill(2) + '_diffusion_' + str(diffusion).ljust(4, '0') + '_sys_dim_' + str(sys_dim) +\
             '_obs_dim_' + str(obs_dim) + '_obs_un_' + str(obs_un).ljust(4, '0') + '_nanl_' +\
             str(nanl).zfill(3) + '_tanl_' + str(tanl).zfill(3) + '_h_' + str(h).ljust(4, '0') + \
-            '_lag_' + str(lag) + '_shift_' + str(shift) +\
+            '_lag_' + str(lag).zfill(3) + '_shift_' + str(shift).zfill(3) +\
             '_N_ens_' + str(N_ens).zfill(3) + '_state_inflation_' + str(np.around(infl, 2)).ljust(4, '0') + '.txt'
 
     f = open(fname, 'wb')
@@ -140,7 +151,7 @@ def experiment(args):
 #fname = './data/timeseries_obs/timeseries_l96_seed_0_rk4_step_sys_dim_40_h_0.01_diffusion_000_nanl_50000_spin_2500_anal_int_0.05.txt'
 #
 ## [time_series, method, seed, lag, shift, obs_un, obs_dim, N_ens, infl] = args
-#experiment([fname, enks, 0, 4, 2, 1.0, 40, 40, 1.05])
+#experiment([fname, etks, 0, 9, 1, 1.0, 40, 40, 1.05])
 #
 #
 ## FUNCTIONALIZED EXPERIMENT CALL OVER PARAMETER MAP
