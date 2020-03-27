@@ -367,6 +367,7 @@ def enks(ens, H, obs, obs_cov, state_infl, **kwargs):
     if 'state_dim' in kwargs:
         state_dim = kwargs['state_dim']
         param_infl = kwargs['param_infl']
+        param_wlk = kwargs['param_wlk']
 
     else:
         state_dim = sys_dim
@@ -422,16 +423,25 @@ def enks(ens, H, obs, obs_cov, state_infl, **kwargs):
                 posterior[:, :, m] = posterior[:, :, m] @ T
         
     # step 3: propagate the posterior initial condition forward to the shift-forward time
-    ens = np.squeeze(posterior[:, :, 0])
+    # NOTE: MAY NEED TO SEND PYTHON A BUG REPORT, INEXPLICABLE CHANGE IN THE VALUE FOR THE
+    # INITIAL POSTERIOR WHEN EVOLVING ENS WHEN USING THE PARAEMTER ENSEMBLE BUT NOT WHEN
+    # ONLY ENSEMBLE OF DYNAMIC STATES, FIXED WITH COPY
+    ens = copy.copy(np.squeeze(posterior[:, :, 0]))
+
+    # step 3a: if performing parameter estimation, apply the parameter model
+    if state_dim != sys_dim:
+        param_ens = ens[state_dim: , :]
+        param_ens = param_ens + param_wlk * np.random.standard_normal(np.shape(param_ens))
+        ens[state_dim:, :] = param_ens
 
     for s in range(shift):
         for k in range(f_steps):
             ens = step_model(ens, **kwargs)
 
-    # step 3a: compute multiplicative inflation of state variables
+    # step 3b: compute multiplicative inflation of state variables
     ens = inflate_state(ens, state_infl, sys_dim, state_dim)
 
-    # step 3b: if including an extended state of parameter values,
+    # step 3c: if including an extended state of parameter values,
     # compute multiplicative inflation of parameter values
     if state_dim != sys_dim:
         ens = inflate_param(ens, param_infl, sys_dim, state_dim)
@@ -603,6 +613,7 @@ def etks(ens, H, obs, obs_cov, state_infl, **kwargs):
     if 'state_dim' in kwargs:
         state_dim = kwargs['state_dim']
         param_infl = kwargs['param_infl']
+        param_wlk = kwargs['param_wlk']
 
     else:
         state_dim = sys_dim
@@ -657,16 +668,25 @@ def etks(ens, H, obs, obs_cov, state_infl, **kwargs):
                 posterior[:, :, m] = deter_update(posterior[:, :, m], w, T_sqrt) 
         
     # step 3: propagate the posterior initial condition forward to the shift-forward time
-    ens = np.squeeze(posterior[:, :, 0])
+    # NOTE: MAY NEED TO SEND PYTHON A BUG REPORT, INEXPLICABLE CHANGE IN THE VALUE FOR THE
+    # INITIAL POSTERIOR WHEN EVOLVING ENS WHEN USING THE PARAEMTER ENSEMBLE BUT NOT WHEN
+    # ONLY ENSEMBLE OF DYNAMIC STATES, FIXED WITH COPY
+    ens = copy.copy(np.squeeze(posterior[:, :, 0]))
+    
+    # step 3a: if performing parameter estimation, apply the parameter model
+    if state_dim != sys_dim:
+        param_ens = ens[state_dim: , :]
+        param_ens = param_ens + param_wlk * np.random.standard_normal(np.shape(param_ens))
+        ens[state_dim:, :] = param_ens
 
     for s in range(shift):
         for k in range(f_steps):
             ens = step_model(ens, **kwargs)
 
-    # step 3a: compute multiplicative inflation of state variables
+    # step 3b: compute multiplicative inflation of state variables
     ens = inflate_state(ens, state_infl, sys_dim, state_dim)
 
-    # step 3b: if including an extended state of parameter values,
+    # step 3c: if including an extended state of parameter values,
     # compute multiplicative inflation of parameter values
     if state_dim != sys_dim:
         ens = inflate_param(ens, param_infl, sys_dim, state_dim)

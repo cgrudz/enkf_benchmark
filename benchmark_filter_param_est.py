@@ -160,21 +160,21 @@ def experiment(args):
 
 ########################################################################################################################
 
-## SINGLE EXPERIMENT DEBUGGING
-fname = './data/timeseries_obs/timeseries_l96_seed_0_rk4_step_sys_dim_40_h_0.01_diffusion_000_nanl_50000_spin_2500_anal_int_0.05.txt'
-
-
-# [time_series, analysis, seed, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl] = args
-experiment([fname, ienkf, 0, 1.0, 40, 0.1, 0.01, 40, 1.1, 1.2])
-
-
-### FUNCTIONALIZED EXPERIMENT CALL OVER PARAMETER MAP
-#j = int(sys.argv[1])
-#f = open('./data/input_data/benchmark_filter_param.txt', 'rb')
-#data = pickle.load(f)
-#args = data[j]
-#f.close()
+### SINGLE EXPERIMENT DEBUGGING
+#fname = './data/timeseries_obs/timeseries_l96_seed_0_rk4_step_sys_dim_40_h_0.01_diffusion_000_nanl_50000_spin_2500_anal_int_0.05.txt'
 #
-#experiment(args)
+#
+## [time_series, analysis, seed, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl] = args
+#experiment([fname, ienkf, 0, 1.0, 40, 0.1, 0.01, 40, 1.1, 1.2])
+#
+#
+## FUNCTIONALIZED EXPERIMENT CALL OVER PARAMETER MAP
+j = int(sys.argv[1])
+f = open('./data/input_data/benchmark_filter_param.txt', 'rb')
+data = pickle.load(f)
+args = data[j]
+f.close()
+
+experiment(args)
 
 
