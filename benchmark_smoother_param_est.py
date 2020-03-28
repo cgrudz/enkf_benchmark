@@ -1,7 +1,7 @@
 import numpy as np
 from l96 import rk4_step as step_model, l96 as dx_dt
 from ensemble_kalman_schemes import analyze_ensemble, analyze_ensemble_parameters
-from ensemble_kalman_schemes import enks, etks 
+from ensemble_kalman_schemes import lag_shift_smoother 
 import pickle
 import copy
 import sys
@@ -105,7 +105,7 @@ def experiment(args):
     for i in range(lag, nanl + 2 * lag + 1, shift):
         # perform assimilation of the DAW
         # we use the observation windo from time zero to time lag
-        analysis = method(ens, H_ens, obs[:, i-lag: i+1], obs_cov, state_infl, **kwargs)
+        analysis = lag_shift_smoother(method, ens, H_ens, obs[:, i-lag: i+1], obs_cov, state_infl, **kwargs)
         ens = analysis['ens']
         fore = analysis['fore']
         filt = analysis['filt']
@@ -149,6 +149,7 @@ def experiment(args):
             'anal_spread': anal_spread,
             'param_spread': param_spread,
             'seed' : seed, 
+            'method': method,
             'diffusion': diffusion,
             'sys_dim': sys_dim,
             'state_dim': state_dim,
@@ -166,7 +167,7 @@ def experiment(args):
             'param_infl': np.around(param_infl, 2)
             }
     
-    fname = './data/' + method.__name__ + '/' + method.__name__ + '_smoother_l96_state_benchmark_seed_' +\
+    fname = './data/' + method + '/' + method + '_smoother_l96_param_benchmark_seed_' +\
             str(seed).zfill(2) + '_diffusion_' + str(diffusion).ljust(4, '0') + '_sys_dim_' + str(sys_dim) + '_state_dim_' + str(state_dim)+\
             '_obs_dim_' + str(obs_dim) + '_obs_un_' + str(obs_un).ljust(4, '0') + '_nanl_' +\
             '_param_err_' + str(param_err).ljust(4, '0') + '_param_wlk_' + str(param_wlk).ljust(4, '0') +\
@@ -183,18 +184,18 @@ def experiment(args):
 
 ########################################################################################################################
 
-### SINGLE EXPERIMENT DEBUGGING
-#fname = './data/timeseries_obs/timeseries_l96_seed_0_rk4_step_sys_dim_40_h_0.01_diffusion_000_nanl_50000_spin_2500_anal_int_0.05.txt'
-#
-## [time_series, method, seed, lag, shift, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl] = args
-#experiment([fname, etks, 0, 4, 1, 1.0, 40, 0.02, 0.01, 20, 1.05, 1.0])
-#
-#
-## FUNCTIONALIZED EXPERIMENT CALL OVER PARAMETER MAP
-j = int(sys.argv[1])
-f = open('./data/input_data/benchmark_smoother_state.txt', 'rb')
-data = pickle.load(f)
-args = data[j]
-f.close()
+## SINGLE EXPERIMENT DEBUGGING
+fname = './data/timeseries_obs/timeseries_l96_seed_0_rk4_step_sys_dim_40_h_0.01_diffusion_000_nanl_50000_spin_2500_anal_int_0.05.txt'
 
-experiment(args)
+# [time_series, method, seed, lag, shift, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl] = args
+experiment([fname, 'enks', 0, 4, 1, 1.0, 40, 0.02, 0.01, 20, 1.05, 1.0])
+
+
+### FUNCTIONALIZED EXPERIMENT CALL OVER PARAMETER MAP
+#j = int(sys.argv[1])
+#f = open('./data/input_data/benchmark_smoother_param.txt', 'rb')
+#data = pickle.load(f)
+#args = data[j]
+#f.close()
+#
+#experiment(args)

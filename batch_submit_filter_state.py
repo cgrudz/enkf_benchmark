@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import glob
 import pickle
-from ensemble_kalman_schemes import enkf, etkf, enks, etks, ienkf
+from ensemble_kalman_schemes import ensemble_filter 
 import ipdb
 
 ########################################################################################################################
@@ -17,7 +17,7 @@ exps = []
 fnames = ['./data/timeseries_obs/timeseries_l96_seed_0_rk4_step_sys_dim_40_h_0.01_diffusion_000_nanl_50000_spin_2500_anal_int_0.05.txt',
           './data/timeseries_obs/timeseries_l96_seed_0_l96s_tay2_step_sys_dim_40_h_0.005_diffusion_0.1_nanl_50000_spin_2500_anal_int_0.05.txt']
 
-analysis = [ienkf]
+analysis = ['enkf', 'etkf']
 seed = 0
 obs_un = 1.0
 obs_dim = 40

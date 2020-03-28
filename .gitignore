@@ -53,7 +53,6 @@ Thumbs.db
 
 # no data
 /data
-/analysis_figs
 /filter_data
 /smoother_state_data
 /filter_param_data/

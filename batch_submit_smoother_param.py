@@ -42,7 +42,7 @@ for name in fnames:
                                 if l != 1:
                                     exps.append([name, anal, seed, l, 1, obs_un, obs_dim, param_err, wlk,  ens, infl, 1.0])
 
-f = open('./data/input_data/benchmark_smoother_state.txt','wb')
+f = open('./data/input_data/benchmark_smoother_param.txt','wb')
 pickle.dump(exps, f)
 f.close()
 

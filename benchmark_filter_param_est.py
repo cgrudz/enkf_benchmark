@@ -1,7 +1,7 @@
 import numpy as np
 from l96 import rk4_step as step_model, l96 as dx_dt
 from ensemble_kalman_schemes import analyze_ensemble, analyze_ensemble_parameters
-from ensemble_kalman_schemes import enkf, etkf, enks, etks, ienkf 
+from ensemble_kalman_schemes import ensemble_filter 
 import pickle
 import copy
 import sys
@@ -52,7 +52,7 @@ def experiment(args):
              }
     
     # number of analyses
-    nanl = 100
+    nanl = 450
 
     # set seed 
     np.random.seed(seed)
@@ -105,17 +105,12 @@ def experiment(args):
         state_fore_rmse[i], state_fore_spread[i] = analyze_ensemble(ens[:state_dim, :], truth[:, i])
 
         # after the forecast step, perform assimilation of the observation
-        analysis = method(ens, H_ens, obs[:, [i]], obs_cov, state_infl, **kwargs)
+        analysis = ensemble_filter(method, ens, H_ens, obs[:, [i]], obs_cov, state_infl, **kwargs)
         ens = analysis['ens']
-        post = analysis['post']
-        fore = analysis['fore']
-
-        X_ens = ens[:state_dim, :]
-        param_ens = ens[state_dim:, :]
 
         # compute the analysis statistics
-        state_anal_rmse[i], state_anal_spread[i] = analyze_ensemble(X_ens, truth[:, i])
-        param_anal_rmse[i], param_anal_spread[i] = analyze_ensemble_parameters(param_ens, param_truth)
+        state_anal_rmse[i], state_anal_spread[i] = analyze_ensemble(ens[:state_dim, :], truth[:, i])
+        param_anal_rmse[i], param_anal_spread[i] = analyze_ensemble_parameters(ens[state_dim:, :], param_truth)
 
         # include random walk for the ensemble of parameters
         param_ens = param_ens + param_wlk * np.random.standard_normal(np.shape(param_ens))
@@ -128,7 +123,7 @@ def experiment(args):
             'state_fore_spread': state_fore_spread,
             'state_anal_spread': state_anal_spread,
             'param_anal_spread': param_anal_spread,
-            'method': method.__name__,
+            'method': method,
             'seed' : seed, 
             'diffusion': diffusion,
             'sys_dim': sys_dim,
@@ -144,7 +139,7 @@ def experiment(args):
             'param_infl': np.around(param_infl, 2)
             }
     
-    fname = './data/' + method.__name__ + '/' + method.__name__ + '_filter_l96_param_benchmark_seed_' +\
+    fname = './data/' + method + '/' + method + '_filter_l96_param_benchmark_seed_' +\
             str(seed).zfill(2) + '_diffusion_' + str(diffusion).ljust(4, '0') + '_sys_dim_' + str(sys_dim) + '_state_dim_' + str(state_dim)+\
             '_obs_dim_' + str(obs_dim) + '_obs_un_' + str(obs_un).ljust(4, '0') + '_param_err_' + str(param_err).ljust(4, '0') +\
             '_param_wlk_' + str(param_wlk).ljust(4, '0') +\
@@ -160,21 +155,21 @@ def experiment(args):
 
 ########################################################################################################################
 
-### SINGLE EXPERIMENT DEBUGGING
-#fname = './data/timeseries_obs/timeseries_l96_seed_0_rk4_step_sys_dim_40_h_0.01_diffusion_000_nanl_50000_spin_2500_anal_int_0.05.txt'
-#
-#
-## [time_series, analysis, seed, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl] = args
-#experiment([fname, ienkf, 0, 1.0, 40, 0.1, 0.01, 40, 1.1, 1.2])
-#
-#
+## SINGLE EXPERIMENT DEBUGGING
+fname = './data/timeseries_obs/timeseries_l96_seed_0_rk4_step_sys_dim_40_h_0.01_diffusion_000_nanl_50000_spin_2500_anal_int_0.05.txt'
+
+
+# [time_series, analysis, seed, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl] = args
+experiment([fname, 'enkf', 0, 1.0, 40, 0.1, 0.01, 40, 1.1, 1.2])
+
+
 ## FUNCTIONALIZED EXPERIMENT CALL OVER PARAMETER MAP
-j = int(sys.argv[1])
-f = open('./data/input_data/benchmark_filter_param.txt', 'rb')
-data = pickle.load(f)
-args = data[j]
-f.close()
-
-experiment(args)
-
+#j = int(sys.argv[1])
+#f = open('./data/input_data/benchmark_filter_param.txt', 'rb')
+#data = pickle.load(f)
+#args = data[j]
+#f.close()
+#
+#experiment(args)
+#
 

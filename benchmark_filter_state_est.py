@@ -1,7 +1,7 @@
 import numpy as np
 from l96 import rk4_step as step_model, l96 as dx_dt
 from ensemble_kalman_schemes import analyze_ensemble
-from ensemble_kalman_schemes import enkf, etkf, ienkf, enks, etks 
+from ensemble_kalman_schemes import ensemble_filter 
 import pickle
 import copy
 import sys
@@ -30,7 +30,7 @@ def experiment(args):
     # number of discrete forecast steps
     f_steps = int(tanl / h)
 
-    # define kwargs for lag-1, shift-1 smoothing
+    # define kwargs for lag-1 smoothing
     kwargs = {
               'dx_dt': dx_dt,
               'f_steps': f_steps,
@@ -87,20 +87,18 @@ def experiment(args):
         fore_rmse[i], fore_spread[i] = analyze_ensemble(ens, truth[:, i])
 
         # after the forecast step, perform assimilation of the observation
-        analysis = method(ens, H, obs[:, [i]], obs_cov, infl, **kwargs)
+        analysis = ensemble_filter(method, ens, H, obs[:, [i]], obs_cov, infl, **kwargs)
         ens = analysis['ens']
 
         # compute the analysis statistics
         anal_rmse[i], anal_spread[i] = analyze_ensemble(ens, truth[:, i])
-        ipdb.set_trace()
-        print(anal_rmse[i], anal_spread[i])
 
     data = {
             'fore_rmse': fore_rmse,
             'anal_rmse': anal_rmse,
             'fore_spread': fore_spread,
             'anal_spread': anal_spread,
-            'method':method.__name__,
+            'method':method,
             'seed' : seed, 
             'diffusion': diffusion,
             'sys_dim': sys_dim,
@@ -113,7 +111,7 @@ def experiment(args):
             'state_infl': np.around(infl, 2)
             }
     
-    fname = './data/' + method.__name__ + '/' + method.__name__ + '_filter_l96_state_benchmark_seed_' +\
+    fname = './data/' + method + '/' + method + '_filter_l96_state_benchmark_seed_' +\
             str(seed).zfill(2) + '_diffusion_' + str(diffusion).ljust(4, '0') + '_sys_dim_' + str(sys_dim) +\
             '_obs_dim_' + str(obs_dim) + '_obs_un_' + str(obs_un).ljust(4, '0') + '_nanl_' + str(nanl).zfill(3) +\
             '_tanl_' + str(tanl).zfill(3) + '_h_' + str(h).ljust(4, '0') +\
@@ -132,7 +130,7 @@ fname = './data/timeseries_obs/timeseries_l96_seed_0_l96s_tay2_step_sys_dim_40_h
 
 
 # [time_series, analysis, seed, obs_un, obs_dim, N_ens, infl] = args
-experiment([fname, enks, 0, 1.0, 40, 41, 1.04])
+experiment([fname, 'enkf', 0, 1.0, 40, 41, 1.04])
 
 
 ### FUNCTIONALIZED EXPERIMENT CALL OVER PARAMETER MAP
