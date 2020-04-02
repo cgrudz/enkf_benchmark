@@ -30,15 +30,9 @@ inflation = np.linspace(1.0, 1.2, 21)
 for name in fnames:
     for anal in analysis:
         for l in lag:
-            for i in range(2):
-                for ens in N_ens:
-                    for infl in inflation:
-                        if i == 0:
-                            exps.append([name, anal, seed, l, l, obs_un, obs_dim, ens, infl])
-
-                        else:
-                            if l != 1:
-                                exps.append([name, anal, seed, l, 1, obs_un, obs_dim, ens, infl])
+            for ens in N_ens:
+                for infl in inflation:
+                    exps.append([name, anal, seed, l, 1, obs_un, obs_dim, ens, infl])
 
 f = open('./data/input_data/benchmark_smoother_state.txt','wb')
 pickle.dump(exps, f)

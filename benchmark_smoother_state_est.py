@@ -81,7 +81,7 @@ def experiment(args):
     # first-shift and second-shift posterior values at the end so that the statistics align on the same time points
     for i in range(lag, nanl + 2 * lag + 1, shift):
         # perform assimilation of the DAW
-        # we use the observation windo from time zero to time lag
+        # we use the observation window from time zero to time lag
         analysis = lag_shift_smoother(method, ens, H, obs[:, i-lag: i+1], obs_cov, infl, **kwargs)
         ens = analysis['ens']
         fore = analysis['fore']
@@ -101,7 +101,6 @@ def experiment(args):
             
             anal_rmse[i - lag + j], anal_spread[i - lag + j] = analyze_ensemble(post[:, :, j], 
                                                                                 truth[:, i - lag  + j])
-
 
     # cut the statistics so that they align on the same time points
     fore_rmse = fore_rmse[lag: lag + nanl]
@@ -152,7 +151,7 @@ def experiment(args):
 #fname = './data/timeseries_obs/timeseries_l96_seed_0_rk4_step_sys_dim_40_h_0.01_diffusion_000_nanl_50000_spin_2500_anal_int_0.05.txt'
 #
 ## [time_series, method, seed, lag, shift, obs_un, obs_dim, N_ens, infl] = args
-#experiment([fname, 'enks', 0, 4, 1, 1.0, 40, 20, 1.05])
+#experiment([fname, 'etks', 0, 4, 4, 1.0, 40, 80, 1.05])
 #
 #
 ### FUNCTIONALIZED EXPERIMENT CALL OVER PARAMETER MAP

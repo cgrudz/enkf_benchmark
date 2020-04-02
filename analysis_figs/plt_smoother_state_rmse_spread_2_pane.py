@@ -9,17 +9,18 @@ import glob
 import ipdb
 from matplotlib.colors import LogNorm
 
-method = 'enks'
+method = 'etks'
+stat = 'smooth'
 tanl = 0.05
-shift = True
+shift = False
 
 f = open('./processed_shift_equal_lag_' + str(shift) + '_smoother_state_rmse_spread_nanl_40000_tanl_0.05_burn_5000.txt', 'rb')
 tmp = pickle.load(f)
 f.close()
 
 
-rmse = tmp[method + '_rmse']
-spread = tmp[method + '_spread']
+rmse = tmp[method + '_' + stat + '_rmse']
+spread = tmp[method + '_' + stat + '_spread']
 
 
 fig = plt.figure()
@@ -61,13 +62,13 @@ ax2.tick_params(
 
 
 x_labs = []
-for i in range(14,44,3):
+for i in range(14,42,3):
     x_labs.append(str(i))
 
 y_labs = []
-y_vals = np.arange(1,10)
+y_vals = np.arange(1,52, 5)
 for i in range(len(y_vals)):
-    if i % 2 == 0:
+    if i % 1 == 0:
         y_labs.append(str(y_vals[i]))
     else:
         y_labs.append('')
@@ -75,15 +76,15 @@ for i in range(len(y_vals)):
 
 y_labs = y_labs[::-1]
 
-ax1.set_xticks(range(0,29,3))
-ax0.set_xticks(range(0,29,3))
+ax1.set_xticks(range(0,28,3))
+ax0.set_xticks(range(0,28,3))
 ax1.set_xticklabels(x_labs)
 ax0.set_xticklabels(x_labs)
 ax1.set_ylim([9,1])
 ax0.set_ylim([9,1])
-ax0.set_yticks(range(1,10))
-ax0.set_yticklabels(y_labs, va='top')
-ax1.set_yticks(range(1,10))
+ax0.set_yticks(range(11))
+ax0.set_yticklabels(y_labs, va='bottom')
+ax1.set_yticks(range(11))
 plt.figtext(.2525, .87, 'Analysis RMSE', horizontalalignment='center', verticalalignment='center', fontsize=24)
 plt.figtext(.7225, .87, 'Analysis spread', horizontalalignment='center', verticalalignment='center', fontsize=24)
 plt.figtext(.015, .52, r'Lag length', horizontalalignment='center', verticalalignment='center', fontsize=24, rotation='90')

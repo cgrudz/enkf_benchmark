@@ -31,16 +31,10 @@ param_wlk = [0.0, 0.01]
 for name in fnames:
     for anal in analysis:
         for l in lag:
-            for i in range(2):
-                for ens in N_ens:
-                    for infl in inflation:
-                        for wlk in param_wlk:
-                            if i == 0:
-                                exps.append([name, anal, seed, l, l, obs_un, obs_dim, param_err, wlk, ens, infl, 1.0])
-
-                            else:
-                                if l != 1:
-                                    exps.append([name, anal, seed, l, 1, obs_un, obs_dim, param_err, wlk,  ens, infl, 1.0])
+            for ens in N_ens:
+                for infl in inflation:
+                    for wlk in param_wlk:
+                        exps.append([name, anal, seed, l, 1, obs_un, obs_dim, param_err, wlk,  ens, infl, 1.0])
 
 f = open('./data/input_data/benchmark_smoother_param.txt','wb')
 pickle.dump(exps, f)

@@ -169,9 +169,9 @@ def experiment(args):
     
     fname = './data/' + method + '/' + method + '_smoother_l96_param_benchmark_seed_' +\
             str(seed).zfill(2) + '_diffusion_' + str(diffusion).ljust(4, '0') + '_sys_dim_' + str(sys_dim) + '_state_dim_' + str(state_dim)+\
-            '_obs_dim_' + str(obs_dim) + '_obs_un_' + str(obs_un).ljust(4, '0') + '_nanl_' +\
+            '_obs_dim_' + str(obs_dim) + '_obs_un_' + str(obs_un).ljust(4, '0') + \
             '_param_err_' + str(param_err).ljust(4, '0') + '_param_wlk_' + str(param_wlk).ljust(4, '0') +\
-            str(nanl).zfill(3) + '_tanl_' + str(tanl).zfill(3) + '_h_' + str(h).ljust(4, '0') + \
+            '_nanl_' + str(nanl).zfill(3) + '_tanl_' + str(tanl).zfill(3) + '_h_' + str(h).ljust(4, '0') + \
             '_lag_' + str(lag).zfill(3) + '_shift_' + str(shift).zfill(3) +\
             '_N_ens_' + str(N_ens).zfill(3) + '_state_infl_' + str(np.around(state_infl, 2)).ljust(4, '0') +\
             '_param_infl_' + str(np.around(param_infl, 2)).ljust(4, '0') + '.txt'
@@ -184,13 +184,13 @@ def experiment(args):
 
 ########################################################################################################################
 
-## SINGLE EXPERIMENT DEBUGGING
-fname = './data/timeseries_obs/timeseries_l96_seed_0_rk4_step_sys_dim_40_h_0.01_diffusion_000_nanl_50000_spin_2500_anal_int_0.05.txt'
-
-# [time_series, method, seed, lag, shift, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl] = args
-experiment([fname, 'enks', 0, 4, 1, 1.0, 40, 0.02, 0.01, 20, 1.05, 1.0])
-
-
+### SINGLE EXPERIMENT DEBUGGING
+#fname = './data/timeseries_obs/timeseries_l96_seed_0_rk4_step_sys_dim_40_h_0.01_diffusion_000_nanl_50000_spin_2500_anal_int_0.05.txt'
+#
+## [time_series, method, seed, lag, shift, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl] = args
+#experiment([fname, 'enks', 0, 4, 1, 1.0, 40, 0.02, 0.01, 20, 1.05, 1.0])
+#
+#
 ### FUNCTIONALIZED EXPERIMENT CALL OVER PARAMETER MAP
 #j = int(sys.argv[1])
 #f = open('./data/input_data/benchmark_smoother_param.txt', 'rb')

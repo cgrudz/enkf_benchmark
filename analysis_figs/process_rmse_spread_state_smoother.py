@@ -12,14 +12,14 @@ shift_equal_lag = True
 
 method_list = ['etks']
 data = {
-        'enks_filter_rmse': np.zeros([11, 29, 21]),
-        'enks_filter_spread': np.zeros([11, 29, 21]),
-        'enks_smooth_rmse': np.zeros([11, 29, 21]),
-        'enks_smooth_spread': np.zeros([11, 29, 21]),
-        'etks_filter_rmse': np.zeros([11, 29, 21]),
-        'etks_filter_spread': np.zeros([11, 29, 21]),
-        'etks_smooth_rmse': np.zeros([11, 29, 21]),
-        'etks_smooth_spread': np.zeros([11, 29, 21]),
+        'enks_filter_rmse': np.zeros([11, 28, 21]),
+        'enks_filter_spread': np.zeros([11, 28, 21]),
+        'enks_smooth_rmse': np.zeros([11, 28, 21]),
+        'enks_smooth_spread': np.zeros([11, 28, 21]),
+        'etks_filter_rmse': np.zeros([11, 28, 21]),
+        'etks_filter_spread': np.zeros([11, 28, 21]),
+        'etks_smooth_rmse': np.zeros([11, 28, 21]),
+        'etks_smooth_spread': np.zeros([11, 28, 21]),
        }
 
 def process_data(fnames, shift_equal_lag):
@@ -56,8 +56,7 @@ def process_data(fnames, shift_equal_lag):
             # inner loop over the inflation values
             for i in range(21):
                 
-                name = exps[i + j * 21 + k * 21 * 29]
-                print(name)
+                name = exps[i + j * 21 + k * 21 * 28]
                 f = open(name,'rb')
                 tmp = pickle.load(f)
                 f.close()
@@ -74,7 +73,6 @@ def process_data(fnames, shift_equal_lag):
                 data[method + '_filter_rmse'][10 - k, j, 20 - i] = np.mean(fil_rmse[burn: nanl+burn])
                 data[method + '_filter_spread'][10 - k, j, 20 - i] = np.mean(fil_spread[burn: nanl+burn])
 
-    ipdb.set_trace()
     smooth_rmse = np.amin(data[method + '_smooth_rmse'], axis=2)
     smooth_spread = np.zeros(np.shape(smooth_rmse))
 
@@ -84,9 +82,9 @@ def process_data(fnames, shift_equal_lag):
     # outter loop in lag value
     for k in range(11):
         # second loop over ensemble size
-        for j  in range(29):
+        for j  in range(28):
             indx_smooth = np.where(data[method + '_smooth_rmse'][k, j, :] == smooth_rmse[k, j])
-            smoother_spread[k, j] = data[method + '_smooth_spread'][k, j, indx_smooth[0]]
+            smooth_spread[k, j] = data[method + '_smooth_spread'][k, j, indx_smooth[0]]
             
             indx_filter = np.where(data[method + '_filter_rmse'][k, j, :] == filter_rmse[k, j])
             filter_spread[k, j] = data[method + '_filter_spread'][k, j, indx_filter[0]]
