@@ -191,11 +191,11 @@ def experiment(args):
 #experiment([fname, 'enks', 0, 4, 1, 1.0, 40, 0.02, 0.01, 20, 1.05, 1.0])
 #
 #
-### FUNCTIONALIZED EXPERIMENT CALL OVER PARAMETER MAP
-#j = int(sys.argv[1])
-#f = open('./data/input_data/benchmark_smoother_param.txt', 'rb')
-#data = pickle.load(f)
-#args = data[j]
-#f.close()
-#
-#experiment(args)
+## FUNCTIONALIZED EXPERIMENT CALL OVER PARAMETER MAP
+j = int(sys.argv[1])
+f = open('./data/input_data/benchmark_smoother_param.txt', 'rb')
+data = pickle.load(f)
+args = data[j]
+f.close()
+
+experiment(args)

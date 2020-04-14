@@ -16,7 +16,7 @@ exps = []
 fnames = ['./data/timeseries_obs/timeseries_l96_seed_0_rk4_step_sys_dim_40_h_0.01_diffusion_000_nanl_50000_spin_2500_anal_int_0.05.txt']#,
          # './data/timeseries_obs/timeseries_l96_seed_0_l96s_tay2_step_sys_dim_40_h_0.005_diffusion_0.1_nanl_50000_spin_2500_anal_int_0.05.txt']
 
-analysis = ['etks']
+analysis = ['enks']
 seed = 0
 lag = range(1, 52, 5)
 # shift will be varied between = lag or = 1
