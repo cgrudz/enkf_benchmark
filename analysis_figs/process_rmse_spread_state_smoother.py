@@ -7,10 +7,10 @@ tanl = 0.05
 nanl = 40000
 burn = 5000
 #diffusion = 0
-shift_equal_lag = True
+shift_equal_lag = False
 
 
-method_list = ['etks']
+method_list = ['etks', 'enks']
 data = {
         'enks_filter_rmse': np.zeros([11, 28, 21]),
         'enks_filter_spread': np.zeros([11, 28, 21]),
@@ -99,6 +99,7 @@ def process_data(fnames, shift_equal_lag):
 for method in method_list:
     fnames = sorted(glob.glob('../smoother_state_data/' + method + '/*' ))
 
+    ipdb.set_trace()
     process_data(fnames, shift_equal_lag)
 
 

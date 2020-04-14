@@ -9,7 +9,7 @@ import glob
 import ipdb
 from matplotlib.colors import LogNorm
 
-method = 'etks'
+method = 'enks'
 stat = 'smooth'
 tanl = 0.05
 shift = False
@@ -22,7 +22,6 @@ f.close()
 rmse = tmp[method + '_' + stat + '_rmse']
 spread = tmp[method + '_' + stat + '_spread']
 
-
 fig = plt.figure()
 ax3 = fig.add_axes([.460, .13, .02, .70])
 ax2 = fig.add_axes([.940, .13, .02, .70])
@@ -31,10 +30,12 @@ ax0 = fig.add_axes([.060, .13, .390, .70])
 
 
 color_map = sns.color_palette("husl", 101)
+max_scale = 0.30
+min_scale = 0.01
 
 
-sns.heatmap(rmse, linewidth=0.5, ax=ax0, cbar_ax=ax3, vmin=0.01, vmax=1.0, cmap=color_map)
-sns.heatmap(spread, linewidth=0.5, ax=ax1, cbar_ax=ax2, vmin=0.01, vmax=1.0, cmap=color_map)
+sns.heatmap(rmse, linewidth=0.5, ax=ax0, cbar_ax=ax3, vmin=min_scale, vmax=max_scale, cmap=color_map)
+sns.heatmap(spread, linewidth=0.5, ax=ax1, cbar_ax=ax2, vmin=min_scale, vmax=max_scale, cmap=color_map)
 
 
 ax2.tick_params(
@@ -88,8 +89,8 @@ ax1.set_yticks(range(11))
 plt.figtext(.2525, .87, 'Analysis RMSE', horizontalalignment='center', verticalalignment='center', fontsize=24)
 plt.figtext(.7225, .87, 'Analysis spread', horizontalalignment='center', verticalalignment='center', fontsize=24)
 plt.figtext(.015, .52, r'Lag length', horizontalalignment='center', verticalalignment='center', fontsize=24, rotation='90')
-plt.figtext(.50, .04, r'Number of samples', horizontalalignment='center', verticalalignment='center', fontsize=24)
-plt.figtext(.5, .95, method + ' optimal inflation, shift equal lag ' + str(shift),
+plt.figtext(.50, .04, r'Ensemble size', horizontalalignment='center', verticalalignment='center', fontsize=24)
+plt.figtext(.5, .95, method + ' optimally tuned inflation',
         horizontalalignment='center', verticalalignment='center', fontsize=24)
 
 

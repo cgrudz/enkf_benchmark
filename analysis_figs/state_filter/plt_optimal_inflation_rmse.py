@@ -71,6 +71,6 @@ ax1.set_yscale('log')
 fig.legend(line_list, methods, fontsize=24, ncol=5, loc='upper center')
 plt.figtext(.2525, .88, 'Analysis RMSE', horizontalalignment='center', verticalalignment='center', fontsize=24)
 plt.figtext(.7225, .88, 'Analysis spread', horizontalalignment='center', verticalalignment='center', fontsize=24)
-plt.figtext(.50, .03, r'Number of samples', horizontalalignment='center', verticalalignment='center', fontsize=24)
+plt.figtext(.50, .03, r'Ensemble size', horizontalalignment='center', verticalalignment='center', fontsize=24)
 
 plt.show()

@@ -132,7 +132,7 @@ def experiment(args):
             'state_infl': np.around(infl, 2)
             }
     
-    fname = './data/' + method + '/' + method + '_smoother_l96_param_benchmark_seed_' +\
+    fname = './data/' + method + '/' + method + '_smoother_l96_state_benchmark_seed_' +\
             str(seed).zfill(2) + '_diffusion_' + str(diffusion).ljust(4, '0') + '_sys_dim_' + str(sys_dim) +\
             '_obs_dim_' + str(obs_dim) + '_obs_un_' + str(obs_un).ljust(4, '0') + '_nanl_' +\
             str(nanl).zfill(3) + '_tanl_' + str(tanl).zfill(3) + '_h_' + str(h).ljust(4, '0') + \
@@ -147,13 +147,13 @@ def experiment(args):
 
 ########################################################################################################################
 
-### SINGLE EXPERIMENT DEBUGGING
-#fname = './data/timeseries_obs/timeseries_l96_seed_0_rk4_step_sys_dim_40_h_0.01_diffusion_000_nanl_50000_spin_2500_anal_int_0.05.txt'
-#
-## [time_series, method, seed, lag, shift, obs_un, obs_dim, N_ens, infl] = args
-#experiment([fname, 'etks', 0, 4, 4, 1.0, 40, 80, 1.05])
-#
-#
+## SINGLE EXPERIMENT DEBUGGING
+fname = './data/timeseries_obs/timeseries_l96_seed_0_rk4_step_sys_dim_40_h_0.01_diffusion_000_nanl_50000_spin_2500_anal_int_0.05.txt'
+
+# [time_series, method, seed, lag, shift, obs_un, obs_dim, N_ens, infl] = args
+experiment([fname, 'etks', 0, 3, 3, 1.0, 40, 80, 1.15])
+
+
 ### FUNCTIONALIZED EXPERIMENT CALL OVER PARAMETER MAP
 #j = int(sys.argv[1])
 #f = open('./data/input_data/benchmark_smoother_state.txt', 'rb')

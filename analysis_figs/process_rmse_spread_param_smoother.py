@@ -8,29 +8,16 @@ nanl = 40000
 burn = 5000
 diffusion = 0
 wlk = 0.01
+shift = 1
 
-method_list = ['enkf', 'etkf', 'enks', 'etks', 'ienkf']
+method_list = ['etks']
 data = {
-        'enkf_state_rmse': np.zeros([21, 29]),
-        'enkf_state_spread': np.zeros([21, 29]),
-        'enkf_param_rmse': np.zeros([21, 29]),
-        'enkf_param_spread': np.zeros([21, 29]),
-        'etkf_state_rmse': np.zeros([21, 29]),
-        'etkf_state_spread': np.zeros([21, 29]),
-        'etkf_param_rmse': np.zeros([21, 29]),
-        'etkf_param_spread': np.zeros([21, 29]),
-        'enks_state_rmse': np.zeros([21, 29]),
-        'enks_state_spread': np.zeros([21, 29]),
-        'enks_param_rmse': np.zeros([21, 29]),
-        'enks_param_spread': np.zeros([21, 29]),
-        'etks_state_rmse': np.zeros([21, 29]),
-        'etks_state_spread': np.zeros([21, 29]),
+        'etks_filter_rmse': np.zeros([21, 29]),
+        'etks_filter_spread': np.zeros([21, 29]),
+        'etks_smooth_rmse': np.zeros([21, 29]),
+        'etks_smooth_spread': np.zeros([21, 29]),
         'etks_param_rmse': np.zeros([21, 29]),
         'etks_param_spread': np.zeros([21, 29]),
-        'ienkf_state_rmse': np.zeros([21, 29]),
-        'ienkf_state_spread': np.zeros([21, 29]),
-        'ienkf_param_rmse': np.zeros([21, 29]),
-        'ienkf_param_spread': np.zeros([21, 29]),
        }
 
 def process_data(fnames):
@@ -42,18 +29,22 @@ def process_data(fnames):
             tmp = pickle.load(f)
             f.close()
             
-            ana_state_rmse = tmp['state_anal_rmse']
-            ana_state_spread = tmp['state_anal_spread']
-            ana_param_rmse = tmp['param_anal_rmse']
-            ana_param_spread = tmp['param_anal_spread']
+            filter_state_rmse = tmp['filt_rmse']
+            filter_state_spread = tmp['filt_spread']
+            smooth_state_rmse = tmp['anal_rmse']
+            smooth_state_spread = tmp['anal_spread']
+            param_rmse = tmp['param_rmse']
+            param_spread = tmp['param_spread']
 
-            data[method + '_state_rmse'][20 - i, j] = np.mean(ana_state_rmse[burn: nanl+burn])
-            data[method + '_state_spread'][20 - i, j] = np.mean(ana_state_spread[burn: nanl+burn])
-            data[method + '_param_rmse'][20 - i, j] = np.mean(ana_param_rmse[burn: nanl+burn])
-            data[method + '_param_spread'][20 - i, j] = np.mean(ana_param_spread[burn: nanl+burn])
+            data[method + '_filter_rmse'][20 - i, j] = np.mean(filter_state_rmse[burn: nanl+burn])
+            data[method + '_filter_spread'][20 - i, j] = np.mean(filter_state_spread[burn: nanl+burn])
+            data[method + '_smooth_rmse'][20 - i, j] = np.mean(smooth_state_rmse[burn: nanl+burn])
+            data[method + '_smooth_spread'][20 - i, j] = np.mean(smooth_state_spread[burn: nanl+burn])
+            data[method + '_param_rmse'][20 - i, j] = np.mean(param_rmse[burn: nanl+burn])
+            data[method + '_param_spread'][20 - i, j] = np.mean(param_spread[burn: nanl+burn])
 
 for method in method_list:
-    fnames = sorted(glob.glob('../filter_param_data/data/' + method + '/*diffusion_' + str(diffusion).zfill(3) + \
+    fnames = sorted(glob.glob('../smoother_param_data/data/' + method + '/*diffusion_' + str(diffusion).zfill(3) + \
                               '*_param_wlk_' + str(wlk).ljust(4, '0') + '_nanl_' + str(nanl+burn) +  '_tanl_' + str(tanl) + '*' ))
 
     process_data(fnames)
