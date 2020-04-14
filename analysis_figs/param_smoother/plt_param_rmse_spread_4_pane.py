@@ -13,23 +13,20 @@ method = 'etks'
 tanl = 0
 nanl = 45000
 burn = 5000
-wlk = 0.01
+wlk = 0.00
 diffusion = 0
 
 
-f = open('./processed_param_rmse_spread_diffusion_' + str(diffusion).zfill(3) +\
-         '_param_wlk_' + str(wlk).ljust(4, '0') + '_nanl_' + str(nanl) +\
-         '_tanl_' + str(tanl) + '_burn_' + str(burn) + '.txt', 'rb')
+f = open('./processed_shift_equal_lag_False_smoother_param_rmse_spread_nanl_40000_tanl_0.05_burn_5000_wlk_' + str(wlk).ljust(4, '0') + '.txt', 'rb')
 
 tmp = pickle.load(f)
 f.close()
 
 
-state_rmse = tmp[method + '_smooth_rmse']
-state_spread = tmp[method + '_smooth_spread']
+smooth_rmse = tmp[method + '_smooth_rmse']
+smooth_spread = tmp[method + '_smooth_spread']
 param_rmse = tmp[method + '_param_rmse']
 param_spread = tmp[method + '_param_spread']
-
 
 fig = plt.figure()
 ax2 = fig.add_axes([.935, .520, .01, .427])
@@ -45,8 +42,8 @@ color_map_state = sns.color_palette("husl", 101)
 color_map_params = sns.color_palette("cubehelix", 100)
 
 
-sns.heatmap(smooth_rmse, linewidth=0.5, ax=ax3, cbar_ax=ax2, vmin=0.01, vmax=1.0, cmap=color_map_state)
-sns.heatmap(smooth_spread, linewidth=0.5, ax=ax4, vmin=0.01, vmax=1.0, cmap=color_map_state, cbar=False)
+sns.heatmap(smooth_rmse, linewidth=0.5, ax=ax3, cbar_ax=ax2, vmin=0.01, vmax=0.3, cmap=color_map_state)
+sns.heatmap(smooth_spread, linewidth=0.5, ax=ax4, vmin=0.01, vmax=0.3, cmap=color_map_state, cbar=False)
 sns.heatmap(param_rmse, linewidth=0.5, ax=ax0, cbar_ax=ax5,  vmin=0.00001, vmax=1.0, cmap=color_map_params, norm=LogNorm())
 sns.heatmap(param_spread, linewidth=0.5, ax=ax1, vmin=0.00001, vmax=1.0, cmap=color_map_params, cbar=False, norm=LogNorm())
 
@@ -96,18 +93,18 @@ for i in range(len(y_vals)):
 
 y_labs = y_labs[::-1]
 
-ax1.set_xticks(range(0,29,3))
-ax0.set_xticks(range(0,29,3))
-ax1.set_xticklabels(x_labs, ha='left')
-ax0.set_xticklabels(x_labs, ha='left')
-ax1.set_ylim([21,0])
-ax0.set_ylim([21,0])
-ax0.set_yticks(range(0,22))
-ax0.set_yticklabels(y_labs, va='center')
-ax3.set_yticks(range(0,22))
-ax3.set_yticklabels(y_labs, va='center')
-ax1.set_yticks(range(0,22))
-#ax1.set_yticklabels(y_labs, va='top', rotation='90')
+#ax1.set_xticks(range(0,29,3))
+#ax0.set_xticks(range(0,29,3))
+#ax1.set_xticklabels(x_labs, ha='left')
+#ax0.set_xticklabels(x_labs, ha='left')
+#ax1.set_ylim([21,0])
+#ax0.set_ylim([21,0])
+#ax0.set_yticks(range(0,22))
+#ax0.set_yticklabels(y_labs, va='center')
+#ax3.set_yticks(range(0,22))
+#ax3.set_yticklabels(y_labs, va='center')
+#ax1.set_yticks(range(0,22))
+##ax1.set_yticklabels(y_labs, va='top', rotation='90')
 plt.figtext(.2, .96, 'Analysis RMSE', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.8, .96, 'Analysis spread', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.03, .7335, r'State vector', horizontalalignment='left', verticalalignment='center', fontsize=22, rotation='90')
