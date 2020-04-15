@@ -11,7 +11,8 @@ import math
 
 tanl = 0.05
 obs_un = 1.0
-stat = 'anal'
+wlk = 0.01
+stat = 'param'
 methods = ['enkf', 'etkf', 'enks', 'etks', 'ienkf']
 markerlist = ['o', 'v', '>', 'X', 'd']
 
@@ -20,7 +21,7 @@ ax1 = fig.add_axes([.530, .10, .40, .76])
 ax0 = fig.add_axes([.050, .10, .40, .76])
 
 
-f = open('processed_rmse_spread_diffusion_000_nanl_40000_tanl_0.05_burn_5000.txt', 'rb')
+f = open('processed_param_rmse_spread_diffusion_000_param_wlk_' + str(wlk).ljust(4,'0') + '_nanl_40000_tanl_0.05_burn_5000.txt', 'rb')
 data = pickle.load(f)
 f.close()
 
@@ -61,13 +62,18 @@ for i in range(5):
 ax1.tick_params(
         labelsize=20,
         labelleft=False,
-        left=False)
+        left=False,
+        labelright=True,
+        right=True
+        )
 
 ax0.tick_params(
         labelsize=20)
 
-ax1.set_ylim([0.10,1.0])
-ax0.set_ylim([0.10,1.0])
+#ax1.set_ylim([0.10,1.0])
+#ax0.set_ylim([0.10,1.0])
+ax1.set_ylim([10e-20,1.0])
+ax0.set_ylim([10e-6,1.0])
 ax1.set_xlim([13.5, 42.5])
 ax0.set_xlim([13.5, 42.5])
 ax0.set_yscale('log')
@@ -83,16 +89,21 @@ ax0.tick_params(
         labelsize=22)
 
 ax1.tick_params(
-        labelsize=22,
-        labelleft=False,
-        left=False,
-        right=True,
-        labelright=True
-        )
+        labelsize=22)
+
+if stat == 'anal':
+    stat = 'Analysis'
+
+elif stat == 'fore':
+    stat == 'Forecast'
+
+elif stat == 'param':
+    stat = 'Parameter'
 
 fig.legend(line_list, methods, fontsize=24, ncol=5, loc='upper center')
 plt.figtext(.2525, .88, stat + ' RMSE', horizontalalignment='center', verticalalignment='center', fontsize=24)
 plt.figtext(.7225, .88, stat + ' spread', horizontalalignment='center', verticalalignment='center', fontsize=24)
 plt.figtext(.50, .03, r'Ensemble size', horizontalalignment='center', verticalalignment='center', fontsize=24)
+plt.figtext(.50, .88, r'Parameter walk std ' + str(wlk), horizontalalignment='center', verticalalignment='center', fontsize=24)
 
 plt.show()

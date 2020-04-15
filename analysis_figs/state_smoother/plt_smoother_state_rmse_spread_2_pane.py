@@ -9,8 +9,8 @@ import glob
 import ipdb
 from matplotlib.colors import LogNorm
 
-method = 'enks'
-stat = 'smooth'
+method = 'etks'
+stat = 'fore'
 tanl = 0.05
 shift = False
 
@@ -86,11 +86,21 @@ ax0.set_ylim([9,1])
 ax0.set_yticks(range(11))
 ax0.set_yticklabels(y_labs, va='bottom')
 ax1.set_yticks(range(11))
-plt.figtext(.2525, .87, 'Analysis RMSE', horizontalalignment='center', verticalalignment='center', fontsize=24)
-plt.figtext(.7225, .87, 'Analysis spread', horizontalalignment='center', verticalalignment='center', fontsize=24)
+
+if stat == 'smooth':
+    stat = 'Smoother'
+
+elif stat == 'filter':
+    stat = 'Filter'
+
+elif stat == 'fore':
+    stat = 'Forecast'
+
+plt.figtext(.2525, .87, stat + ' RMSE', horizontalalignment='center', verticalalignment='center', fontsize=24)
+plt.figtext(.7225, .87, stat + ' spread', horizontalalignment='center', verticalalignment='center', fontsize=24)
 plt.figtext(.015, .52, r'Lag length', horizontalalignment='center', verticalalignment='center', fontsize=24, rotation='90')
 plt.figtext(.50, .04, r'Ensemble size', horizontalalignment='center', verticalalignment='center', fontsize=24)
-plt.figtext(.5, .95, method + ' optimally tuned inflation',
+plt.figtext(.5, .95, method + ' ' + stat +  ' optimally tuned inflation, shift equal lag ' + str(shift),
         horizontalalignment='center', verticalalignment='center', fontsize=24)
 
 

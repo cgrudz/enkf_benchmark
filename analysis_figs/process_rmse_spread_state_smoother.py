@@ -12,10 +12,14 @@ shift_equal_lag = False
 
 method_list = ['etks', 'enks']
 data = {
+        'enks_fore_rmse': np.zeros([11, 28, 21]),
+        'enks_fore_spread': np.zeros([11, 28, 21]),
         'enks_filter_rmse': np.zeros([11, 28, 21]),
         'enks_filter_spread': np.zeros([11, 28, 21]),
         'enks_smooth_rmse': np.zeros([11, 28, 21]),
         'enks_smooth_spread': np.zeros([11, 28, 21]),
+        'etks_fore_rmse': np.zeros([11, 28, 21]),
+        'etks_fore_spread': np.zeros([11, 28, 21]),
         'etks_filter_rmse': np.zeros([11, 28, 21]),
         'etks_filter_spread': np.zeros([11, 28, 21]),
         'etks_smooth_rmse': np.zeros([11, 28, 21]),
@@ -67,17 +71,26 @@ def process_data(fnames, shift_equal_lag):
                 fil_rmse = tmp['filt_rmse']
                 fil_spread = tmp['filt_spread']
 
+                for_rmse = tmp['fore_rmse']
+                for_spread = tmp['fore_spread']
+
                 data[method + '_smooth_rmse'][10 - k, j, 20 - i] = np.mean(ana_rmse[burn: nanl+burn])
                 data[method + '_smooth_spread'][10 - k, j, 20 - i] = np.mean(ana_spread[burn: nanl+burn])
 
                 data[method + '_filter_rmse'][10 - k, j, 20 - i] = np.mean(fil_rmse[burn: nanl+burn])
                 data[method + '_filter_spread'][10 - k, j, 20 - i] = np.mean(fil_spread[burn: nanl+burn])
 
+                data[method + '_fore_rmse'][10 - k, j, 20 - i] = np.mean(for_rmse[burn: nanl+burn])
+                data[method + '_fore_spread'][10 - k, j, 20 - i] = np.mean(for_spread[burn: nanl+burn])
+
     smooth_rmse = np.amin(data[method + '_smooth_rmse'], axis=2)
     smooth_spread = np.zeros(np.shape(smooth_rmse))
 
-    filter_rmse = np.amin(data[method + '_filter_rmse'], axis=2)
-    filter_spread = np.zeros(np.shape(filter_rmse))
+    filter_rmse = np.zeros(np.shape(smooth_rmse)) 
+    filter_spread = np.zeros(np.shape(smooth_rmse))
+
+    fore_rmse = np.zeros(np.shape(smooth_rmse)) 
+    fore_spread = np.zeros(np.shape(smooth_rmse))
 
     # outter loop in lag value
     for k in range(11):
@@ -86,20 +99,24 @@ def process_data(fnames, shift_equal_lag):
             indx_smooth = np.where(data[method + '_smooth_rmse'][k, j, :] == smooth_rmse[k, j])
             smooth_spread[k, j] = data[method + '_smooth_spread'][k, j, indx_smooth[0]]
             
-            indx_filter = np.where(data[method + '_filter_rmse'][k, j, :] == filter_rmse[k, j])
-            filter_spread[k, j] = data[method + '_filter_spread'][k, j, indx_filter[0]]
+            filter_rmse[k, j] = data[method + '_filter_rmse'][k, j, indx_smooth[0]]
+            filter_spread[k, j] = data[method + '_filter_spread'][k, j, indx_smooth[0]]
+
+            fore_rmse[k, j] = data[method + '_fore_rmse'][k, j, indx_smooth[0]]
+            fore_spread[k, j] = data[method + '_fore_spread'][k, j, indx_smooth[0]]
 
 
     data[method + '_smooth_rmse'] = smooth_rmse
     data[method + '_smooth_spread'] = smooth_spread 
     data[method + '_filter_rmse'] = filter_rmse
     data[method + '_filter_spread'] = filter_spread 
+    data[method + '_fore_rmse'] = fore_rmse
+    data[method + '_fore_spread'] = fore_spread 
 
 
 for method in method_list:
     fnames = sorted(glob.glob('../smoother_state_data/' + method + '/*' ))
 
-    ipdb.set_trace()
     process_data(fnames, shift_equal_lag)
 
 

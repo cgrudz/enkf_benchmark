@@ -8,7 +8,8 @@ from matplotlib.colors import LogNorm
 import glob
 import ipdb
 
-method = 'enks'
+method = 'ienkf'
+stat = 'fore'
 tanl = 0.05
 
 
@@ -17,8 +18,8 @@ tmp = pickle.load(f)
 f.close()
 
 
-rmse = tmp[method + '_rmse']
-spread = tmp[method + '_spread']
+rmse = tmp[method +'_' + stat + '_rmse']
+spread = tmp[method + '_' + stat + '_spread']
 
 
 fig = plt.figure()
@@ -83,11 +84,18 @@ ax0.set_ylim([21,0])
 ax0.set_yticks(range(0,22))
 ax0.set_yticklabels(y_labs, va='top')
 ax1.set_yticks(range(0,22))
-plt.figtext(.2525, .87, 'Analysis RMSE', horizontalalignment='center', verticalalignment='center', fontsize=24)
-plt.figtext(.7225, .87, 'Analysis spread', horizontalalignment='center', verticalalignment='center', fontsize=24)
+
+if stat == 'anal':
+    stat = 'Analysis'
+
+elif stat == 'fore':
+    stat = 'Forecast'
+
+plt.figtext(.2525, .87, stat + ' RMSE', horizontalalignment='center', verticalalignment='center', fontsize=24)
+plt.figtext(.7225, .87, stat + ' spread', horizontalalignment='center', verticalalignment='center', fontsize=24)
 plt.figtext(.015, .52, r'Inflation level', horizontalalignment='center', verticalalignment='center', fontsize=24, rotation='90')
 plt.figtext(.50, .04, r'Number of samples', horizontalalignment='center', verticalalignment='center', fontsize=24)
-plt.figtext(.5, .95, method + '- Observation interval ' + str(tanl), horizontalalignment='center', verticalalignment='center', fontsize=24)
+plt.figtext(.5, .95, method + ' ' + stat, horizontalalignment='center', verticalalignment='center', fontsize=24)
 
 
 plt.show()

@@ -10,16 +10,26 @@ diffusion = 0
 
 method_list = ['enkf', 'etkf', 'enks', 'etks', 'ienkf']
 data = {
-        'enkf_rmse': np.zeros([21, 29]),
-        'enkf_spread': np.zeros([21, 29]),
-        'etkf_rmse': np.zeros([21, 29]),
-        'etkf_spread': np.zeros([21, 29]),
-        'enks_rmse': np.zeros([21, 29]),
-        'enks_spread': np.zeros([21, 29]),
-        'etks_rmse': np.zeros([21, 29]),
-        'etks_spread': np.zeros([21, 29]),
-        'ienkf_rmse': np.zeros([21, 29]),
-        'ienkf_spread': np.zeros([21, 29]),
+        'enkf_fore_rmse': np.zeros([21, 29]),
+        'enkf_fore_spread': np.zeros([21, 29]),
+        'etkf_fore_rmse': np.zeros([21, 29]),
+        'etkf_fore_spread': np.zeros([21, 29]),
+        'enks_fore_rmse': np.zeros([21, 29]),
+        'enks_fore_spread': np.zeros([21, 29]),
+        'etks_fore_rmse': np.zeros([21, 29]),
+        'etks_fore_spread': np.zeros([21, 29]),
+        'ienkf_fore_rmse': np.zeros([21, 29]),
+        'ienkf_fore_spread': np.zeros([21, 29]),
+        'enkf_anal_rmse': np.zeros([21, 29]),
+        'enkf_anal_spread': np.zeros([21, 29]),
+        'etkf_anal_rmse': np.zeros([21, 29]),
+        'etkf_anal_spread': np.zeros([21, 29]),
+        'enks_anal_rmse': np.zeros([21, 29]),
+        'enks_anal_spread': np.zeros([21, 29]),
+        'etks_anal_rmse': np.zeros([21, 29]),
+        'etks_anal_spread': np.zeros([21, 29]),
+        'ienkf_anal_rmse': np.zeros([21, 29]),
+        'ienkf_anal_spread': np.zeros([21, 29]),
        }
 
 def process_data(fnames):
@@ -34,11 +44,17 @@ def process_data(fnames):
             ana_rmse = tmp['anal_rmse']
             ana_spread = tmp['anal_spread']
 
-            data[method + '_rmse'][20 - i, j] = np.mean(ana_rmse[burn: nanl+burn])
-            data[method + '_spread'][20 - i, j] = np.mean(ana_spread[burn: nanl+burn])
+            for_rmse = tmp['fore_rmse']
+            for_spread = tmp['fore_spread']
+
+            data[method + '_anal_rmse'][20 - i, j] = np.mean(ana_rmse[burn: nanl+burn])
+            data[method + '_anal_spread'][20 - i, j] = np.mean(ana_spread[burn: nanl+burn])
+
+            data[method + '_fore_rmse'][20 - i, j] = np.mean(for_rmse[burn: nanl+burn])
+            data[method + '_fore_spread'][20 - i, j] = np.mean(for_spread[burn: nanl+burn])
 
 for method in method_list:
-    fnames = sorted(glob.glob('../filter_data/data/' + method + '/*diffusion_' + str(diffusion).zfill(3) + \
+    fnames = sorted(glob.glob('../filter_state_data/' + method + '/*diffusion_' + str(diffusion).zfill(3) + \
                               '*_nanl_' + str(nanl+burn) +  '_tanl_' + str(tanl) + '*' ))
 
     process_data(fnames)

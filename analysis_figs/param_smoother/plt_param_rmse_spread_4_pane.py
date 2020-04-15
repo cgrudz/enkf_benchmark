@@ -13,7 +13,7 @@ method = 'etks'
 tanl = 0
 nanl = 45000
 burn = 5000
-wlk = 0.00
+wlk = 0.01
 diffusion = 0
 
 
@@ -84,32 +84,35 @@ for i in range(14,44,3):
 
 y_labs = []
 y_vals = range(1, 52, 5)
+j = 0
 for i in range(len(y_vals)):
-    if i % 6 == 0:
+    if j % 2 == 0:
         y_labs.append(str(np.around(y_vals[i],2)))
     else:
         y_labs.append('')
+    
+    j+=1
 
 
 y_labs = y_labs[::-1]
 
-#ax1.set_xticks(range(0,29,3))
-#ax0.set_xticks(range(0,29,3))
-#ax1.set_xticklabels(x_labs, ha='left')
-#ax0.set_xticklabels(x_labs, ha='left')
-#ax1.set_ylim([21,0])
-#ax0.set_ylim([21,0])
-#ax0.set_yticks(range(0,22))
-#ax0.set_yticklabels(y_labs, va='center')
-#ax3.set_yticks(range(0,22))
-#ax3.set_yticklabels(y_labs, va='center')
-#ax1.set_yticks(range(0,22))
-##ax1.set_yticklabels(y_labs, va='top', rotation='90')
-plt.figtext(.2, .96, 'Analysis RMSE', horizontalalignment='center', verticalalignment='center', fontsize=22)
-plt.figtext(.8, .96, 'Analysis spread', horizontalalignment='center', verticalalignment='center', fontsize=22)
+ax1.set_xticks(range(0,29,3))
+ax0.set_xticks(range(0,29,3))
+ax1.set_xticklabels(x_labs, ha='left')
+ax0.set_xticklabels(x_labs, ha='left')
+ax1.set_ylim([10,0])
+ax0.set_ylim([10,0])
+ax0.set_yticks(range(0,11))
+ax0.set_yticklabels(y_labs, va='center')
+ax3.set_yticks(range(0,11))
+ax3.set_yticklabels(y_labs, va='center')
+ax1.set_yticks(range(0,11))
+#ax1.set_yticklabels(y_labs, va='top', rotation='90')
+plt.figtext(.2, .96, 'Smoother RMSE', horizontalalignment='center', verticalalignment='center', fontsize=22)
+plt.figtext(.8, .96, 'Smoother spread', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.03, .7335, r'State vector', horizontalalignment='left', verticalalignment='center', fontsize=22, rotation='90')
-plt.figtext(.03, .2935, r'Param vector', horizontalalignment='left', verticalalignment='center', fontsize=22, rotation='90')
-plt.figtext(.02, .52, r'Inflation level', horizontalalignment='right', verticalalignment='center', fontsize=22, rotation='90')
+plt.figtext(.03, .2935, r'F parameter', horizontalalignment='left', verticalalignment='center', fontsize=22, rotation='90')
+plt.figtext(.02, .52, r'Lag length', horizontalalignment='right', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.50, .02, r'Number of samples', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.5, .965, method + '- Observation interval ' + str(tanl) + ' Param wlk ' + str(wlk), horizontalalignment='center', verticalalignment='bottom', fontsize=24)
 

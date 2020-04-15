@@ -7,18 +7,22 @@ tanl = 0.05
 nanl = 40000
 burn = 5000
 #diffusion = 0
-wlk = 0.00
+wlk = 0.01
 shift_equal_lag = False
 
 
 method_list = ['etks']
 data = {
+        'enks_fore_rmse': np.zeros([11, 28, 21]),
+        'enks_fore_spread': np.zeros([11, 28, 21]),
         'enks_filter_rmse': np.zeros([11, 28, 21]),
         'enks_filter_spread': np.zeros([11, 28, 21]),
         'enks_smooth_rmse': np.zeros([11, 28, 21]),
         'enks_smooth_spread': np.zeros([11, 28, 21]),
         'enks_param_rmse': np.zeros([11, 28, 21]),
         'enks_param_spread': np.zeros([11, 28, 21]),
+        'etks_fore_rmse': np.zeros([11, 28, 21]),
+        'etks_fore_spread': np.zeros([11, 28, 21]),
         'etks_filter_rmse': np.zeros([11, 28, 21]),
         'etks_filter_spread': np.zeros([11, 28, 21]),
         'etks_smooth_rmse': np.zeros([11, 28, 21]),
@@ -54,7 +58,6 @@ def process_data(fnames, shift_equal_lag):
         else:
             exps.append(name)
 
-    ipdb.set_trace()
     # outter loop in lag value
     for k in range(11):
         # second loop over ensemble size
@@ -73,6 +76,9 @@ def process_data(fnames, shift_equal_lag):
                 fil_rmse = tmp['filt_rmse']
                 fil_spread = tmp['filt_spread']
 
+                for_rmse = tmp['fore_rmse']
+                for_spread = tmp['fore_spread']
+
                 par_rmse = tmp['param_rmse']
                 par_spread = tmp['param_spread']
 
@@ -81,6 +87,9 @@ def process_data(fnames, shift_equal_lag):
 
                 data[method + '_filter_rmse'][10 - k, j, 20 - i] = np.mean(fil_rmse[burn: nanl+burn])
                 data[method + '_filter_spread'][10 - k, j, 20 - i] = np.mean(fil_spread[burn: nanl+burn])
+                
+                data[method + '_fore_rmse'][10 - k, j, 20 - i] = np.mean(for_rmse[burn: nanl+burn])
+                data[method + '_fore_spread'][10 - k, j, 20 - i] = np.mean(for_spread[burn: nanl+burn])
                 
                 data[method + '_param_rmse'][10 - k, j, 20 - i] = np.mean(par_rmse[burn: nanl+burn])
                 data[method + '_param_spread'][10 - k, j, 20 - i] = np.mean(par_spread[burn: nanl+burn])
@@ -91,6 +100,8 @@ def process_data(fnames, shift_equal_lag):
     param_spread = np.zeros(np.shape(smooth_rmse))
     filter_rmse = np.zeros(np.shape(smooth_rmse))
     filter_spread = np.zeros(np.shape(smooth_rmse))
+    fore_rmse = np.zeros(np.shape(smooth_rmse))
+    fore_spread = np.zeros(np.shape(smooth_rmse))
 
     # outter loop in lag value
     for k in range(11):
@@ -102,12 +113,16 @@ def process_data(fnames, shift_equal_lag):
             param_spread[k, j] = data[method + '_param_spread'][k, j, indx_smooth[0]]
             filter_rmse[k, j] = data[method + '_filter_rmse'][k, j, indx_smooth[0]]
             filter_spread[k, j] = data[method + '_filter_spread'][k, j, indx_smooth[0]]
+            fore_rmse[k, j] = data[method + '_fore_rmse'][k, j, indx_smooth[0]]
+            fore_spread[k, j] = data[method + '_fore_spread'][k, j, indx_smooth[0]]
 
 
     data[method + '_smooth_rmse'] = smooth_rmse
     data[method + '_smooth_spread'] = smooth_spread 
     data[method + '_filter_rmse'] = filter_rmse
     data[method + '_filter_spread'] = filter_spread 
+    data[method + '_fore_rmse'] = fore_rmse
+    data[method + '_fore_spread'] = fore_spread 
     data[method + '_param_rmse'] = param_rmse
     data[method + '_param_spread'] = param_spread 
 
