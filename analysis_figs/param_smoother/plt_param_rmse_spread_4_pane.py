@@ -13,9 +13,9 @@ method = 'etks'
 tanl = 0
 nanl = 45000
 burn = 5000
-wlk = 0.01
+wlk = 0.0
 diffusion = 0
-
+stat = 'fore'
 
 f = open('./processed_shift_equal_lag_False_smoother_param_rmse_spread_nanl_40000_tanl_0.05_burn_5000_wlk_' + str(wlk).ljust(4, '0') + '.txt', 'rb')
 
@@ -23,8 +23,8 @@ tmp = pickle.load(f)
 f.close()
 
 
-smooth_rmse = tmp[method + '_smooth_rmse']
-smooth_spread = tmp[method + '_smooth_spread']
+smooth_rmse = tmp[method + '_' + stat + '_rmse']
+smooth_spread = tmp[method + '_' + stat + '_spread']
 param_rmse = tmp[method + '_param_rmse']
 param_spread = tmp[method + '_param_spread']
 
@@ -108,13 +108,24 @@ ax3.set_yticks(range(0,11))
 ax3.set_yticklabels(y_labs, va='center')
 ax1.set_yticks(range(0,11))
 #ax1.set_yticklabels(y_labs, va='top', rotation='90')
-plt.figtext(.2, .96, 'Smoother RMSE', horizontalalignment='center', verticalalignment='center', fontsize=22)
-plt.figtext(.8, .96, 'Smoother spread', horizontalalignment='center', verticalalignment='center', fontsize=22)
+if stat == 'smooth':
+    stat = 'Smoother'
+
+elif stat == 'filter':
+    stat = 'Filter'
+
+elif stat == 'fore':
+    stat = 'Forecast'
+
+plt.figtext(.2, .96, stat + ' RMSE', horizontalalignment='center', verticalalignment='center', fontsize=22)
+plt.figtext(.8, .96, stat+ ' spread', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.03, .7335, r'State vector', horizontalalignment='left', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.03, .2935, r'F parameter', horizontalalignment='left', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.02, .52, r'Lag length', horizontalalignment='right', verticalalignment='center', fontsize=22, rotation='90')
+plt.figtext(.2, .02, r'Smoother RMSE', horizontalalignment='center', verticalalignment='center', fontsize=22)
+plt.figtext(.8, .02, r'Smoother spread', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.50, .02, r'Number of samples', horizontalalignment='center', verticalalignment='center', fontsize=22)
-plt.figtext(.5, .965, method + '- Observation interval ' + str(tanl) + ' Param wlk ' + str(wlk), horizontalalignment='center', verticalalignment='bottom', fontsize=24)
+plt.figtext(.5, .965, method + ' Param wlk std ' + str(wlk), horizontalalignment='center', verticalalignment='bottom', fontsize=24)
 
 
 plt.show()

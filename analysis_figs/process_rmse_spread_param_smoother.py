@@ -7,7 +7,7 @@ tanl = 0.05
 nanl = 40000
 burn = 5000
 #diffusion = 0
-wlk = 0.01
+wlk = 0.00
 shift_equal_lag = False
 
 
