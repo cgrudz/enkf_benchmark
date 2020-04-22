@@ -47,7 +47,6 @@ def analyze_ensemble_parameters(ens, truth):
     
     return [rmse, spread]
 
-
 ########################################################################################################################
 # random mean preserving orthogonal matrix, auxilliary function for determinstic EnKF schemes
 
@@ -70,7 +69,6 @@ def rand_orth(N_ens):
 
     return U
 
-
 ########################################################################################################################
 # dynamic state variable inflation
 
@@ -89,7 +87,6 @@ def inflate_state(ens, inflation, sys_dim, state_dim):
     ens = (X_mean + A_t @ infl).transpose()
 
     return ens
-
 
 ########################################################################################################################
 # parameter multiplicative inflation
@@ -110,9 +107,9 @@ def inflate_param(ens, inflation, sys_dim, state_dim):
 
     return ens
 
-
 ########################################################################################################################
 # transform auxilliary function for EnKF, ETKF, EnKS, ETKS
+
 
 def transform(analysis, ens, H, obs, obs_cov):
     """Computes transform and related values for EnKF, ETKF, EnkS, ETKS
@@ -194,9 +191,9 @@ def transform(analysis, ens, H, obs, obs_cov):
 
     return trans
 
-
 ########################################################################################################################
 # auxilliary function for updating transform flavors of ensemble kalman filter 
+
 
 def ens_update(analysis, ens, transform):
 
@@ -227,9 +224,9 @@ def ens_update(analysis, ens, transform):
 
     return ens
 
-
 ########################################################################################################################
 # general filter code 
+
 
 def ensemble_filter(analysis, ens, H, obs, obs_cov, state_infl, **kwargs):
 
@@ -265,9 +262,9 @@ def ensemble_filter(analysis, ens, H, obs, obs_cov, state_infl, **kwargs):
 
     return {'ens': ens}
 
-
 ########################################################################################################################
 # lag_shift_smoother
+
 
 def lag_shift_smoother_classic(analysis, ens, H, obs, obs_cov, state_infl, **kwargs):
 
@@ -335,11 +332,17 @@ def lag_shift_smoother_classic(analysis, ens, H, obs, obs_cov, state_infl, **kwa
         for m in range(shift):
             posterior[:, :, m] = ens_update(analysis, posterior[:, :, m], trans)
             
+    # step 3: if performing parameter estimation, apply the parameter model
+    if state_dim != sys_dim:
+        param_ens = ens[state_dim: , :]
+        param_ens = param_ens + param_wlk * np.random.standard_normal(np.shape(param_ens))
+        ens[state_dim:, :] = param_ens
+    
     return {'ens': ens, 'post': posterior, 'fore': forecast, 'filt': filtered}
-
 
 ########################################################################################################################
 # lag_shift_smoother
+
 
 def lag_shift_smoother_hybrid(analysis, ens, H, obs, obs_cov, state_infl, **kwargs):
 
@@ -451,9 +454,9 @@ def lag_shift_smoother_hybrid(analysis, ens, H, obs, obs_cov, state_infl, **kwar
 
     return {'ens': ens, 'post': posterior, 'fore': forecast, 'filt': filtered}
 
-
 ########################################################################################################################
 # iterative_lag_shift_smoother
+
 
 def iterative_lag_shift_smoother(analysis, ens, H, obs, obs_cov, state_infl, **kwargs):
 
@@ -560,9 +563,9 @@ def iterative_lag_shift_smoother(analysis, ens, H, obs, obs_cov, state_infl, **k
 
     return {'ens': ens, 'post': posterior, 'fore': forecast, 'filt': filtered}
 
-
 ########################################################################################################################
 # IEnKF
+
 
 def ienkf(ens, H, obs, obs_cov, state_infl, 
         epsilon=0.0001, tol=0.001, l_max=50, **kwargs):
@@ -681,8 +684,6 @@ def ienkf(ens, H, obs, obs_cov, state_infl,
 ########################################################################################################################
 # Additional methods, non-standard, may have remaining bugs
 ########################################################################################################################
-########################################################################################################################
-
 ########################################################################################################################
 # Stochastic EnKF analysis step, using anomalies
 
@@ -1376,6 +1377,4 @@ def ienkf_f(ens, H, obs, obs_cov, f_steps, h,
     ens = (X_mean + infl @  A_t).transpose()
 
     return ens
-
-
 
