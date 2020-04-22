@@ -4,7 +4,7 @@ import sys
 import ipdb
 from common import picopen, picwrite
 from methods.l96 import rk4_step as step_model, l96 as dx_dt
-from methods.ensemble_kalman_schemes import analyze_ensemble
+from methods.ensemble_kalman_schemes import analyze_ensemble, analyze_ensemble_parameters
 from methods.ensemble_kalman_schemes import ensemble_filter 
 
 ########################################################################################################################
@@ -39,7 +39,7 @@ def filter_state(args):
              }
 
     # number of analyses
-    nanl = 100
+    nanl = 450
 
     # set seed 
     np.random.seed(seed)
@@ -113,7 +113,7 @@ def filter_state(args):
             '_tanl_' + str(tanl).zfill(3) + '_h_' + str(h).ljust(4, '0') +\
             '_N_ens_' + str(N_ens).zfill(3) + '_state_inflation_' + str(np.around(infl, 2)).ljust(4, '0') + '.txt'
 
-    picwrite(data, f)
+    picwrite(data, fname)
     return(args)
 
 ########################################################################################################################
@@ -234,6 +234,7 @@ def filter_param(args):
             'obs_dim': obs_dim, 
             'obs_un': obs_un,
             'param_err': param_err,
+            'param_wlk': param_wlk,
             'nanl': nanl,
             'tanl': tanl,
             'h': h,
@@ -250,7 +251,7 @@ def filter_param(args):
             '_N_ens_' + str(N_ens).zfill(3) + '_state_inflation_' + str(np.around(state_infl, 2)).ljust(4, '0') +\
             '_param_infl_' + str(np.around(param_infl, 2)).ljust(4, '0') + '.txt'
 
-    picwrite(data, f)
+    picwrite(data, fname)
     return(args)
 
 ########################################################################################################################
