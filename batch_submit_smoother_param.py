@@ -16,7 +16,7 @@ exps = []
 fnames = ['./data/timeseries_obs/timeseries_l96_seed_0_rk4_step_sys_dim_40_h_0.01_diffusion_000_nanl_50000_spin_2500_anal_int_0.05.txt']#,
          # './data/timeseries_obs/timeseries_l96_seed_0_l96s_tay2_step_sys_dim_40_h_0.005_diffusion_0.1_nanl_50000_spin_2500_anal_int_0.05.txt']
 
-analysis = ['enks']
+analysis = ['etks']
 seed = 0
 lag = range(1, 52, 5)
 # shift will be varied between = lag or = 1
@@ -52,7 +52,7 @@ for j in range(len(exps)):
     f.writelines('#SBATCH -e smoother.err\n')
     f.writelines('#SBATCH --account=cpu-s2-mathstat_trial-0\n')
     f.writelines('#SBATCH --partition=cpu-s2-core-0\n')
-    f.writelines('python benchmark_smoother_param_est.py ' + str(j))
+    f.writelines('python batch_experiment_driver.py ' + str(j))
 
     f.close()
 
