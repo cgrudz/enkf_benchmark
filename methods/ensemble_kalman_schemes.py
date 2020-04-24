@@ -53,7 +53,7 @@ def analyze_ensemble_parameters(ens, truth):
 
 def rand_orth(N_ens):
     """This generates a mean preserving random orthogonal matrix as in sakov oke 08"""
-
+    
     Q = np.random.standard_normal([N_ens -1, N_ens -1])
     Q, R = np.linalg.qr(Q)
     U_p =  np.zeros([N_ens, N_ens])
@@ -263,14 +263,14 @@ def ensemble_filter(analysis, ens, H, obs, obs_cov, state_infl, **kwargs):
     return {'ens': ens}
 
 ########################################################################################################################
-# lag_shift_smoother
+# classical version lag_shift_smoother
 
 
 def lag_shift_smoother_classic(analysis, ens, H, obs, obs_cov, state_infl, **kwargs):
 
     """Lag-shift ensemble kalman smoother analysis step, classical version
 
-    This version of the lag-shift enkf uses the last filtered state for the forecast, differentiated from the hybrid
+    This version of the lag-shift enks uses the last filtered state for the forecast, differentiated from the hybrid
     and iterative schemes which will use the once or multiple-times re-analized posterior for the initial condition
     for the forecast of the states to the next shift.
 
@@ -341,12 +341,15 @@ def lag_shift_smoother_classic(analysis, ens, H, obs, obs_cov, state_infl, **kwa
     return {'ens': ens, 'post': posterior, 'fore': forecast, 'filt': filtered}
 
 ########################################################################################################################
-# lag_shift_smoother
+# single iteration, correlation-based lag_shift_smoother
 
 
 def lag_shift_smoother_hybrid(analysis, ens, H, obs, obs_cov, state_infl, **kwargs):
 
-    """Lag, shift ensemble kalman smoother analysis step
+    """Lag-shift ensemble kalman smoother analysis step, hybrid version
+
+    This version of the lag-shift enks uses the final re-analyzed posterior initial state for the forecast, 
+    which is pushed forward in time from the initial conidtion to shift-number of observation times.
 
     Optional keyword argument includes state dimension if there is an extended state including parameters.  In this
     case, a value for the parameter covariance inflation should be included in addition to the state covariance
@@ -380,7 +383,7 @@ def lag_shift_smoother_hybrid(analysis, ens, H, obs, obs_cov, state_infl, **kwar
     forecast = np.zeros([sys_dim, N_ens, shift])
     posterior = np.zeros([sys_dim, N_ens, shift])
     filtered = np.zeros([sys_dim, N_ens, shift])
-    posterior[:, :, 0] = ens
+    ens_0 = copy.copy(ens)
 
     # step 2: forward propagate the ensemble and analyze the observations
     for l in range(1, lag+1):
@@ -413,26 +416,16 @@ def lag_shift_smoother_hybrid(analysis, ens, H, obs, obs_cov, state_infl, **kwar
                 # store the filtered states alone, not mda values
                 filtered[:, :, l - (lag - shift + 1)] = ens
         
-        #  step 2d: we store the current posterior estimate for times within the initial shift window
-        if l < shift:
-            posterior[:, :, l] = ens
-        
-        # step 2e: find the re-analyzed posterior for the initial shift window
-        # states, if we have an assimilation update
+        # step 2d: compute the re-analyzed initial condition if we have an assimilation update
         if mda or l > (lag - shift):
-            for m in range(shift):
-                if m < l:
-                    # here we only apply the update to former posterior states and never
-                    # the current one -- especially important for shift - lag = 0 or we
-                    # apply the ensemble update to all states all the time
-                    posterior[:, :, m] = ens_update(analysis, posterior[:, :, m], trans)
+            ens_0 = ens_update(analysis, ens_0, trans)
+            ens_0 = inflate_state(ens_0, state_infl, sys_dim, state_dim)
             
-
-    #### NOTE: need to make a change here with regard to the single iteration smoother versus
-    #### classical version
-
+            if state_dim != sys_dim:
+                ens_0 = inflate_param(ens_0, param_infl, sys_dim, state_dim)
+            
     # step 3: propagate the posterior initial condition forward to the shift-forward time
-    ens = copy.copy(np.squeeze(posterior[:, :, 0]))
+    ens = copy.copy(ens_0)
 
     # step 3a: if performing parameter estimation, apply the parameter model
     if state_dim != sys_dim:
@@ -440,25 +433,24 @@ def lag_shift_smoother_hybrid(analysis, ens, H, obs, obs_cov, state_infl, **kwar
         param_ens = param_ens + param_wlk * np.random.standard_normal(np.shape(param_ens))
         ens[state_dim:, :] = param_ens
 
+    # step 3b: propagate the re-analyzed, resampled-in-parameter-space ensemble up by shift
+    # observation times
     for s in range(shift):
+        posterior[:, :, s] = ens
         for k in range(f_steps):
             ens = step_model(ens, **kwargs)
-
-    # step 3b: compute multiplicative inflation of state variables
-    ens = inflate_state(ens, state_infl, sys_dim, state_dim)
-
-    # step 3c: if including an extended state of parameter values,
-    # compute multiplicative inflation of parameter values
-    if state_dim != sys_dim:
-        ens = inflate_param(ens, param_infl, sys_dim, state_dim)
 
     return {'ens': ens, 'post': posterior, 'fore': forecast, 'filt': filtered}
 
 ########################################################################################################################
+########################################################################################################################
+# Additional methods, non-standard, may have remaining bugs
+########################################################################################################################
+########################################################################################################################
 # iterative_lag_shift_smoother
 
 
-def iterative_lag_shift_smoother(analysis, ens, H, obs, obs_cov, state_infl, **kwargs):
+def lag_shift_smoother_iterative(analysis, ens, H, obs, obs_cov, state_infl, **kwargs):
 
     """Lag, shift iterative ensemble kalman smoother analysis step
 
@@ -679,11 +671,6 @@ def ienkf(ens, H, obs, obs_cov, state_infl,
 
     return {'ens': ens, 'posterior': posterior}
 
-
-########################################################################################################################
-########################################################################################################################
-# Additional methods, non-standard, may have remaining bugs
-########################################################################################################################
 ########################################################################################################################
 # Stochastic EnKF analysis step, using anomalies
 

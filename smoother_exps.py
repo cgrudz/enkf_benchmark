@@ -42,7 +42,7 @@ def classic_state(args):
              }
 
     # number of analyses
-    nanl = 450
+    nanl = 4500
 
     # set seed 
     np.random.seed(seed)
@@ -189,7 +189,7 @@ def classic_param(args):
              }
 
     # number of analyses
-    nanl = 450 
+    nanl = 4500
 
     # set seed 
     np.random.seed(seed)
@@ -347,7 +347,7 @@ def hybrid_state(args):
              }
 
     # number of analyses
-    nanl = 450 
+    nanl = 4500 
 
     # set seed 
     np.random.seed(seed)
@@ -391,7 +391,7 @@ def hybrid_state(args):
         fore = analysis['fore']
         filt = analysis['filt']
         post = analysis['post']
-        
+
         for j in range(shift):
             # compute the forecast, filter and analysis statistics
             # forward index the true state by 1, because the sequence starts at time zero for which there is no
@@ -490,7 +490,7 @@ def hybrid_param(args):
              }
 
     # number of analyses
-    nanl = 450 
+    nanl = 4500 
 
     # set seed 
     np.random.seed(seed)
