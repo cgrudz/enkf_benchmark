@@ -4,7 +4,7 @@ import sys
 import ipdb
 from common import picopen, picwrite
 from methods.l96 import rk4_step as step_model, l96 as dx_dt
-from methods.ensemble_kalman_schemes import analyze_ensemble, analyze_ensemble_parameters
+from methods.ensemble_kalman_schemes import analyze_ensemble, analyze_ensemble_parameters, alternating_obs_operator
 from methods.ensemble_kalman_schemes import lag_shift_smoother_classic, lag_shift_smoother_hybrid
 
 ########################################################################################################################
@@ -59,8 +59,9 @@ def classic_state(args):
     obs = obs[:, :nanl + 2 * lag + 1]
     truth = copy.copy(obs)
     
-    # define the observation operator here, change if needed for different configurations
-    H = np.eye(obs_dim, sys_dim)
+    # define the observation operator here via alternating state components, for obs_dim
+    # total states observed.  Handled differently when obs_dim < 0.5*sys_dim or obs_dim > 0.5*sys_dim
+    H = alternating_obs_operator(sys_dim, obs_dim) 
     obs = H @ obs + obs_un * np.random.standard_normal([obs_dim, nanl + 2 *  lag + 1])
     
     # define the associated time-invariant observation error covariance
@@ -212,15 +213,16 @@ def classic_param(args):
     obs = obs[:, :nanl + 2 * lag + 1]
     truth = copy.copy(obs)
     
-    # define the observation operator here, change if needed for different configurations
-    H = np.eye(obs_dim, state_dim)
+    # define the observation operator for the dynamic state variables -- note, the param_truth is not part of the
+    # truth state vector below, this is stored separately
+    H = alternating_obs_operator(state_dim, obs_dim) 
     obs = H @ obs + obs_un * np.random.standard_normal([obs_dim, nanl + 2 *  lag + 1])
     
     # define the associated time-invariant observation error covariance
     obs_cov = obs_un**2 * np.eye(obs_dim)
 
     # define the observation operator on the extended state, used for the ensemble
-    H_ens = np.eye(obs_dim, sys_dim)
+    H = alternating_obs_operator(sys_dim, obs_dim, **kwargs)
 
     # create storage for the forecast and analysis statistics
     fore_rmse = np.zeros(nanl + 2 * lag + 1)
@@ -249,7 +251,7 @@ def classic_param(args):
         # we use the observation window from time +1 of the ensemble to time of ensemble +shift
         # last filtered state becomes new posterior for reanalysis
         kwargs['posterior'] = filt
-        analysis = lag_shift_smoother_classic(method, ens, H_ens, obs[:, i: i + shift], obs_cov, state_infl, **kwargs)
+        analysis = lag_shift_smoother_classic(method, ens, H, obs[:, i: i + shift], obs_cov, state_infl, **kwargs)
         ens = analysis['ens']
         fore = analysis['fore']
         filt = analysis['filt']
@@ -308,7 +310,7 @@ def classic_param(args):
     fname = './data/' + method + '_classic/' + method + '_classic_smoother_l96_param_benchmark_seed_' +\
             str(seed).zfill(2) + '_diffusion_' + str(diffusion).ljust(4, '0') + '_sys_dim_' + str(sys_dim) + '_state_dim_' + str(state_dim)+\
             '_obs_dim_' + str(obs_dim) + '_obs_un_' + str(obs_un).ljust(4, '0') + \
-            '_param_err_' + str(param_err).ljust(4, '0') + '_param_wlk_' + str(param_wlk).ljust(4, '0') +\
+            '_param_err_' + str(param_err).ljust(4, '0') + '_param_wlk_' + str(param_wlk).ljust(6, '0') +\
             '_nanl_' + str(nanl).zfill(3) + '_tanl_' + str(tanl).zfill(3) + '_h_' + str(h).ljust(4, '0') + \
             '_lag_' + str(lag).zfill(3) + '_shift_' + str(shift).zfill(3) +\
             '_N_ens_' + str(N_ens).zfill(3) + '_state_infl_' + str(np.around(state_infl, 2)).ljust(4, '0') +\
@@ -365,8 +367,9 @@ def hybrid_state(args):
     obs = obs[:, :nanl + 2 * lag + 1]
     truth = copy.copy(obs)
     
-    # define the observation operator here, change if needed for different configurations
-    H = np.eye(obs_dim, sys_dim)
+    # define the observation operator here via alternating state components, for obs_dim
+    # total states observed.  Handled differently when obs_dim < 0.5*sys_dim or obs_dim > 0.5*sys_dim
+    H = alternating_obs_operator(sys_dim, obs_dim)
     obs = H @ obs + obs_un * np.random.standard_normal([obs_dim, nanl + 2 *  lag + 1])
     
     # define the associated time-invariant observation error covariance
@@ -513,15 +516,16 @@ def hybrid_param(args):
     obs = obs[:, :nanl + 2 * lag + 1]
     truth = copy.copy(obs)
     
-    # define the observation operator here, change if needed for different configurations
-    H = np.eye(obs_dim, state_dim)
+    # define the observation operator for the dynamic state variables -- note, the param_truth is not part of the
+    # truth state vector below, this is stored separately
+    H = alternating_obs_operator(state_dim, obs_dim) 
     obs = H @ obs + obs_un * np.random.standard_normal([obs_dim, nanl + 2 *  lag + 1])
     
     # define the associated time-invariant observation error covariance
     obs_cov = obs_un**2 * np.eye(obs_dim)
 
     # define the observation operator on the extended state, used for the ensemble
-    H_ens = np.eye(obs_dim, sys_dim)
+    H = alternating_obs_operator(sys_dim, obs_dim, **kwargs)
 
     # create storage for the forecast and analysis statistics
     fore_rmse = np.zeros(nanl + 2 * lag + 1)
@@ -539,7 +543,7 @@ def hybrid_param(args):
     for i in range(lag, nanl + 2 * lag + 1, shift):
         # perform assimilation of the DAW
         # we use the observation windo from time zero to time lag
-        analysis = lag_shift_smoother_hybrid(method, ens, H_ens, obs[:, i-lag: i+1], obs_cov, state_infl, **kwargs)
+        analysis = lag_shift_smoother_hybrid(method, ens, H, obs[:, i-lag: i+1], obs_cov, state_infl, **kwargs)
         ens = analysis['ens']
         fore = analysis['fore']
         filt = analysis['filt']
@@ -604,7 +608,7 @@ def hybrid_param(args):
     fname = './data/' + method + '_hybrid/' + method + '_hybrid_smoother_l96_param_benchmark_seed_' +\
             str(seed).zfill(2) + '_diffusion_' + str(diffusion).ljust(4, '0') + '_sys_dim_' + str(sys_dim) + '_state_dim_' + str(state_dim)+\
             '_obs_dim_' + str(obs_dim) + '_obs_un_' + str(obs_un).ljust(4, '0') + \
-            '_param_err_' + str(param_err).ljust(4, '0') + '_param_wlk_' + str(param_wlk).ljust(4, '0') +\
+            '_param_err_' + str(param_err).ljust(4, '0') + '_param_wlk_' + str(param_wlk).ljust(6, '0') +\
             '_nanl_' + str(nanl).zfill(3) + '_tanl_' + str(tanl).zfill(3) + '_h_' + str(h).ljust(4, '0') + \
             '_lag_' + str(lag).zfill(3) + '_shift_' + str(shift).zfill(3) +\
             '_N_ens_' + str(N_ens).zfill(3) + '_state_infl_' + str(np.around(state_infl, 2)).ljust(4, '0') +\

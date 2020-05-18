@@ -7,6 +7,54 @@ import ipdb
 # Main methods, debugged and validated
 ########################################################################################################################
 
+# alternating id obs
+
+def alternating_obs_operator(sys_dim, obs_dim, **kwargs):
+    """Defines observation operator by alternating state vector components.
+
+    If obs_dim == state_dim, this returns the identity matrix, otherwise alternating observations of the state
+    components.  For parameter estimation, state_dim is an optional kwarg to define the operator to only observe
+    the regular state vector, not the extended one."""
+
+    if 'state_dim' in kwargs:
+        # performing parameter estimation, load the dynamic state dimension
+        state_dim = kwargs['state_dim']
+        
+        # load observation operator for the extended state, without observing extended state components
+        H = np.eye(state_dim, sys_dim)
+        
+        # proceed with alternating observations of the regular state vector
+        sys_dim = state_dim
+
+    else:
+        H = np.eye(sys_dim)
+
+    if sys_dim == obs_dim:
+        pass
+
+    elif (obs_dim / sys_dim) > .5:
+        # the observation dimension is greater than half the state dimension, so we
+        # remove only the trailing odd-index rows from the identity matrix, equal to the difference
+        # of the state and observation dimension
+        R = int(sys_dim - obs_dim)
+        H = np.delete(H, np.s_[-2*R::2], 0)
+
+    elif (obs_dim / sys_dim) == .5:
+        # the observation dimension is equal to half the state dimension so we remove exactly
+        # half the rows, corresponding to those with odd-index
+        H = np.delete(H, np.s_[1::2], 0)
+
+    else:
+        # the observation dimension is less than half of the state dimension so that we
+        # remove all odd rows and then the R=sys_dim/2 - obs_dim  trailing even rows
+        H = np.delete(H, np.s_[1::2], 0)
+        R = int(sys_dim/2 - obs_dim)
+        H = np.delete(H, np.s_[-R:], 0)
+
+    return H
+
+
+########################################################################################################################
 
 def analyze_ensemble(ens, truth):
     """This will compute the ensemble RMSE as compared with the true twin, and the ensemble spread."""

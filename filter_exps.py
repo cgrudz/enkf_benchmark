@@ -5,12 +5,11 @@ import ipdb
 from common import picopen, picwrite
 from methods.l96 import rk4_step as step_model, l96 as dx_dt
 from methods.ensemble_kalman_schemes import analyze_ensemble, analyze_ensemble_parameters
-from methods.ensemble_kalman_schemes import ensemble_filter 
+from methods.ensemble_kalman_schemes import ensemble_filter, alternating_obs_operator 
 
 ########################################################################################################################
 # Main filtering experiments, debugged and validated for use with schemes in methods directory
 ########################################################################################################################
-
 
 def filter_state(args):
     # Define experiment parameters
@@ -39,7 +38,7 @@ def filter_state(args):
              }
 
     # number of analyses
-    nanl = 450
+    nanl = 4500
 
     # set seed 
     np.random.seed(seed)
@@ -56,8 +55,9 @@ def filter_state(args):
     [sys_dim, nanl] = np.shape(obs)
     truth = copy.copy(obs)
     
-    # define the observation operator here, change if needed for different configurations
-    H = np.eye(obs_dim, sys_dim)
+    # define the observation operator here via alternating state components, for obs_dim
+    # total states observed.  Handled differently when obs_dim < 0.5*sys_dim or obs_dim > 0.5*sys_dim
+    H = alternating_obs_operator(sys_dim, obs_dim)
     obs = H @ obs + obs_un * np.random.standard_normal([obs_dim, nanl])
     
     # define the associated time invariant observation error covariance
@@ -155,7 +155,7 @@ def filter_param(args):
              }
     
     # number of analyses
-    nanl = 450
+    nanl = 4500
 
     # set seed 
     np.random.seed(seed)
@@ -164,8 +164,10 @@ def filter_param(args):
     ens = np.random.multivariate_normal(init, np.eye(state_dim), size=N_ens).transpose()
     
     if len(param_truth) > 1:
+        # note here the covariance is supplied 
         param_ens = np.random.multivariate_normal(np.squeeze(param_truth), np.diag(param_truth * param_err)**2, size=N_ens)
     else:
+        # note here the standard deviation is supplied
         param_ens = np.reshape(np.random.normal(np.squeeze(param_truth), scale=np.squeeze(param_truth)*param_err, size=N_ens), [1, N_ens])
     
     # defined the extended state ensemble
@@ -176,24 +178,25 @@ def filter_param(args):
     obs = obs[:, 1:nanl + 1]
     truth = copy.copy(obs)
     
-    # define the observation operator for the dynamic state variables
-    H = np.eye(obs_dim, state_dim)
+    # define the observation operator for the dynamic state variables -- note, the param_truth is not part of the
+    # truth state vector below, this is stored separately
+    H = alternating_obs_operator(state_dim, obs_dim) 
     obs =  H @ obs + obs_un * np.random.standard_normal([obs_dim, nanl])
     
     # define the observation operator on the extended state, used for the ensemble
-    H_ens = np.eye(obs_dim, sys_dim)
+    H = alternating_obs_operator(sys_dim, obs_dim, **kwargs) 
 
     # define the associated time invariant observation error covariance
     obs_cov = obs_un**2 * np.eye(obs_dim)
 
     # create storage for the forecast and analysis statistics
-    state_fore_rmse = np.zeros(nanl)
-    state_anal_rmse = np.zeros(nanl)
-    param_anal_rmse = np.zeros(nanl)
+    fore_rmse = np.zeros(nanl)
+    anal_rmse = np.zeros(nanl)
+    param_rmse = np.zeros(nanl)
     
-    state_fore_spread = np.zeros(nanl)
-    state_anal_spread = np.zeros(nanl)
-    param_anal_spread = np.zeros(nanl)
+    fore_spread = np.zeros(nanl)
+    anal_spread = np.zeros(nanl)
+    param_spread = np.zeros(nanl)
 
     for i in range(nanl):
         # copy the initial ensemble for lag-1 smoothing
@@ -205,27 +208,27 @@ def filter_param(args):
             ens = step_model(ens, **kwargs)
 
         # compute the forecast statistics
-        state_fore_rmse[i], state_fore_spread[i] = analyze_ensemble(ens[:state_dim, :], truth[:, i])
+        fore_rmse[i], fore_spread[i] = analyze_ensemble(ens[:state_dim, :], truth[:, i])
 
         # after the forecast step, perform assimilation of the observation
-        analysis = ensemble_filter(method, ens, H_ens, obs[:, [i]], obs_cov, state_infl, **kwargs)
+        analysis = ensemble_filter(method, ens, H, obs[:, [i]], obs_cov, state_infl, **kwargs)
         ens = analysis['ens']
 
         # compute the analysis statistics
-        state_anal_rmse[i], state_anal_spread[i] = analyze_ensemble(ens[:state_dim, :], truth[:, i])
-        param_anal_rmse[i], param_anal_spread[i] = analyze_ensemble_parameters(ens[state_dim:, :], param_truth)
+        anal_rmse[i], anal_spread[i] = analyze_ensemble(ens[:state_dim, :], truth[:, i])
+        param_rmse[i], param_spread[i] = analyze_ensemble_parameters(ens[state_dim:, :], param_truth)
 
         # include random walk for the ensemble of parameters
         param_ens = param_ens + param_wlk * np.random.standard_normal(np.shape(param_ens))
         ens[state_dim:, :] = param_ens
 
     data = {
-            'state_fore_rmse': state_fore_rmse,
-            'state_anal_rmse': state_anal_rmse,
-            'param_anal_rmse': param_anal_rmse,
-            'state_fore_spread': state_fore_spread,
-            'state_anal_spread': state_anal_spread,
-            'param_anal_spread': param_anal_spread,
+            'fore_rmse': fore_rmse,
+            'anal_rmse': anal_rmse,
+            'param_rmse': param_rmse,
+            'fore_spread': fore_spread,
+            'anal_spread': anal_spread,
+            'param_spread': param_spread,
             'method': method,
             'seed' : seed, 
             'diffusion': diffusion,
@@ -246,7 +249,7 @@ def filter_param(args):
     fname = './data/' + method + '/' + method + '_filter_l96_param_benchmark_seed_' +\
             str(seed).zfill(2) + '_diffusion_' + str(diffusion).ljust(4, '0') + '_sys_dim_' + str(sys_dim) + '_state_dim_' + str(state_dim)+\
             '_obs_dim_' + str(obs_dim) + '_obs_un_' + str(obs_un).ljust(4, '0') + '_param_err_' + str(param_err).ljust(4, '0') +\
-            '_param_wlk_' + str(param_wlk).ljust(4, '0') +\
+            '_param_wlk_' + str(param_wlk).ljust(6, '0') +\
             '_nanl_' + str(nanl).zfill(3) + '_tanl_' + str(tanl).zfill(3) + '_h_' + str(h).ljust(4, '0') + \
             '_N_ens_' + str(N_ens).zfill(3) + '_state_inflation_' + str(np.around(state_infl, 2)).ljust(4, '0') +\
             '_param_infl_' + str(np.around(param_infl, 2)).ljust(4, '0') + '.txt'

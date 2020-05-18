@@ -10,15 +10,15 @@ import ipdb
 from matplotlib.colors import LogNorm
 
 method = 'etks'
+version = 'hybrid'
 tanl = 0
 nanl = 45000
 burn = 5000
-wlk = 0.0
+wlk = 0.0100
 diffusion = 0
-stat = 'fore'
+stat = 'smooth'
 
-f = open('./processed_shift_equal_lag_False_smoother_param_rmse_spread_nanl_40000_tanl_0.05_burn_5000_wlk_' + str(wlk).ljust(4, '0') + '.txt', 'rb')
-
+f = open('./processed_'+ version + '_smoother_param_rmse_spread_nanl_40000_tanl_0.05_burn_5000_wlk_' + str(wlk).ljust(6, '0') + '.txt', 'rb')
 tmp = pickle.load(f)
 f.close()
 
@@ -125,7 +125,7 @@ plt.figtext(.02, .52, r'Lag length', horizontalalignment='right', verticalalignm
 plt.figtext(.2, .02, r'Smoother RMSE', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.8, .02, r'Smoother spread', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.50, .02, r'Number of samples', horizontalalignment='center', verticalalignment='center', fontsize=22)
-plt.figtext(.5, .965, method + ' Param wlk std ' + str(wlk), horizontalalignment='center', verticalalignment='bottom', fontsize=24)
+plt.figtext(.5, .965, method + ' ' + version + ' Param wlk std ' + str(wlk), horizontalalignment='center', verticalalignment='bottom', fontsize=24)
 
 
 plt.show()

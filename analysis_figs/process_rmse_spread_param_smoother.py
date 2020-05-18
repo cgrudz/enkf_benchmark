@@ -7,11 +7,12 @@ tanl = 0.05
 nanl = 40000
 burn = 5000
 #diffusion = 0
-wlk = 0.00
+wlk = 0.0100
 shift_equal_lag = False
 
 
-method_list = ['etks']
+method_list = ['enks', 'etks']
+version = 'hybrid'
 data = {
         'enks_fore_rmse': np.zeros([11, 28, 21]),
         'enks_fore_spread': np.zeros([11, 28, 21]),
@@ -128,13 +129,12 @@ def process_data(fnames, shift_equal_lag):
 
 
 for method in method_list:
-    fnames = sorted(glob.glob('../smoother_param_data/' + method + '/*'+'_wlk_' + str(wlk) + '*' ))
-
+    fnames = sorted(glob.glob('../smoother_param_data/' + method + '_' + version + '/*'+'_wlk_' + str(wlk).ljust(6,'0') + '*' ))
     process_data(fnames, shift_equal_lag)
 
 
-f = open('./processed_shift_equal_lag_' + str(shift_equal_lag) + '_smoother_param_rmse_spread_nanl_' + str(nanl) +\
-         '_tanl_' + str(tanl) + '_burn_' + str(burn) + '_wlk_' + str(wlk).ljust(4,'0') + '.txt', 'wb')
+f = open('./processed_' + version + '_smoother_param_rmse_spread_nanl_' + str(nanl) +\
+         '_tanl_' + str(tanl) + '_burn_' + str(burn) + '_wlk_' + str(wlk).ljust(6,'0') + '.txt', 'wb')
 
 pickle.dump(data, f)
 f.close()
