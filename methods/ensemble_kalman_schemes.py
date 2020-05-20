@@ -233,9 +233,12 @@ def transform(analysis, ens, H, obs, obs_cov):
         # step 9: compute the square root of the transform
         V, Sigma, V_t = np.linalg.svd(T)
         T_sqrt = V @ np.diag(np.sqrt(Sigma)) @ V_t
+        
+        # step 10:  generate mean preserving random orthogonal matrix as in sakov oke 08
+        U = rand_orth(N_ens)
 
-        # step 10: package the transform output
-        trans = [w, T_sqrt]
+        # step 11: package the transform output
+        trans = [w, T_sqrt, U]
 
     return trans
 
@@ -254,7 +257,7 @@ def ens_update(analysis, ens, transform):
     
     elif analysis=='etkf' or analysis=='etks':
         # step 0: unpack transform agruments and infer dimensions
-        [w, T_sqrt] = transform
+        [w, T_sqrt, U] = transform
         [sys_dim, N_ens] = np.shape(ens)
         
         # step 1: compute the ensemble mean
@@ -263,10 +266,7 @@ def ens_update(analysis, ens, transform):
         # step 2: compute the normalized anomalies, transposed
         A_t = (ens.transpose() - X_mean) / np.sqrt(N_ens - 1)
 
-        # step 4:  generate mean preserving random orthogonal matrix as in sakov oke 08
-        U = rand_orth(N_ens)
-
-        # step 5: compute the update, reshape for proper broadcasting
+        # step 3: compute the update, reshape for proper broadcasting
         ens = np.reshape(w, [N_ens, 1]) + T_sqrt @ U * np.sqrt(N_ens - 1)
         ens = (X_mean + ens.transpose() @ A_t).transpose()
 
@@ -326,18 +326,15 @@ def lag_shift_smoother_classic(analysis, ens, H, obs, obs_cov, state_infl, **kwa
     case, a value for the parameter covariance inflation should be included in addition to the state covariance
     inflation."""
     
-    # step 0: infer the ensemble, obs, and state dimensions, ens should be last state filtered in the previous
-    # iteration of lag-shift smoothing
-    [sys_dim, N_ens] = np.shape(ens)
-    
-    # observation sequence includes shift forward times
-    [obs_dim, shift] = np.shape(obs)
-
-    # unpack kwargs, posterior contains length shift past states ending with ens as final entry
+    # step 0: unpack kwargs, posterior contains length lag past states ending with ens as final entry
     f_steps = kwargs['f_steps']
     step_model = kwargs['step_model']
     posterior = kwargs['posterior']
     
+    # infer the ensemble, obs, and system dimensions, observation sequence includes shift forward times
+    [obs_dim, shift] = np.shape(obs)
+    [sys_dim, N_ens, lag] = np.shape(posterior)
+
     # optional parameter estimation
     if 'state_dim' in kwargs:
         state_dim = kwargs['state_dim']
@@ -376,9 +373,9 @@ def lag_shift_smoother_classic(analysis, ens, H, obs, obs_cov, state_infl, **kwa
         # store the filtered states
         filtered[:, :, s] = ens
         
-        # step 2e: find the re-analyzed posterior for the initial shift window states
-        for m in range(shift):
-            posterior[:, :, m] = ens_update(analysis, posterior[:, :, m], trans)
+        # step 2e: re-analyze the posterior in the lag window of states
+        for l in range(lag):
+            posterior[:, :, l] = ens_update(analysis, posterior[:, :, l], trans)
             
     # step 3: if performing parameter estimation, apply the parameter model
     if state_dim != sys_dim:
@@ -390,6 +387,7 @@ def lag_shift_smoother_classic(analysis, ens, H, obs, obs_cov, state_infl, **kwa
 
 ########################################################################################################################
 # single iteration, correlation-based lag_shift_smoother
+## NOTE: need to re-write the hybrid experiments for the revised spinup 
 
 
 def lag_shift_smoother_hybrid(analysis, ens, H, obs, obs_cov, state_infl, **kwargs):
