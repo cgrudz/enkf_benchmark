@@ -24,14 +24,14 @@ obs_dim = 40
 N_ens = range(14, 42)
 inflation = np.linspace(1.0, 1.2, 21)
 param_err = 0.03
-param_wlk = [0.0000, 0.0100, 0.0010, 0.0001]
+param_wlk = [0.0100, 0.0010, 0.0001, 0.0000]
 
 for name in fnames:
-    for anal in analysis:
-        for l in lag:
-            for ens in N_ens:
-                for infl in inflation:
-                    for wlk in param_wlk:
+    for wlk in param_wlk:
+        for anal in analysis:
+            for l in lag:
+                for ens in N_ens:
+                    for infl in inflation:
                         exps.append([name, anal, seed, l, 1, obs_un, obs_dim, param_err, wlk,  ens, infl, 1.0])
 
 f = open('./data/input_data/benchmark_smoother_param.txt','wb')
@@ -52,7 +52,6 @@ for j in range(len(exps)):
     f.writelines('#SBATCH --account=cpu-s2-mathstat_trial-0\n')
     f.writelines('#SBATCH --partition=cpu-s2-core-0\n')
     f.writelines('python batch_experiment_driver.py ' + str(j))
-
     f.close()
 
     os.system('sbatch  submit_job.sl')
