@@ -350,6 +350,10 @@ def lag_shift_smoother_classic(analysis, ens, H, obs, obs_cov, state_infl, **kwa
 
     # step 2: forward propagate the ensemble and analyze the observations
     for s in range(shift):
+
+        # initialize posterior for the special case lag=shift
+        if lag==shift:
+            posterior[:, :, s] = ens
         
         # step 2a: propagate between observation times
         for k in range(f_steps):
@@ -404,15 +408,19 @@ def lag_shift_smoother_hybrid(analysis, ens, H, obs, obs_cov, state_infl, **kwar
     # step 0: infer the ensemble, obs, and state dimensions
     [sys_dim, N_ens] = np.shape(ens)
     
-    # observation sequence includes time zero, length lag + 1 
+    # observation sequence ranges from time +1 to time +lag
     [obs_dim, lag] = np.shape(obs)
-    lag -= 1
 
     # unpack kwargs
     f_steps = kwargs['f_steps']
     step_model = kwargs['step_model']
     shift = kwargs['shift']
+    
+    # multiple data assimilation to be implemented in a future version
     mda = kwargs['mda']
+    # spin to be used on the first lag-assimilations -- this makes the smoothed time-zero re-analized prior
+    # the first initial condition for the future iterations regardless of sda or mda settings
+    spin = kwargs['spin']
     
     # optional parameter estimation
     if 'state_dim' in kwargs:
@@ -432,7 +440,7 @@ def lag_shift_smoother_hybrid(analysis, ens, H, obs, obs_cov, state_infl, **kwar
     ens_0 = copy.copy(ens)
 
     # step 2: forward propagate the ensemble and analyze the observations
-    for l in range(1, lag+1):
+    for l in range(lag):
         
         # step 2a: propagate between observation times
         for k in range(f_steps):
@@ -440,11 +448,11 @@ def lag_shift_smoother_hybrid(analysis, ens, H, obs, obs_cov, state_infl, **kwar
 
         # step 2b: store the forecast to compute ensemble statistics before observations become available
         if l > (lag - shift):
-            forecast[:, :, l - (lag - shift + 1)] = ens
+            forecast[:, :, l - (lag - shift)] = ens
 
         # step 2c: perform the filtering step if we do multiple data assimilation (mda=True) or
         # whenever the lag-forecast steps take us to new observations (l>(lag - shift))
-        if mda or l > (lag - shift):
+        if spin or mda or l > (lag - shift):
             # observation sequence starts from the time of the inital condition
             # though we do not assimilate time zero observations
             trans = transform(analysis, ens, H, obs[:, l], obs_cov)
@@ -460,10 +468,10 @@ def lag_shift_smoother_hybrid(analysis, ens, H, obs, obs_cov, state_infl, **kwar
 
             if l > (lag - shift):
                 # store the filtered states alone, not mda values
-                filtered[:, :, l - (lag - shift + 1)] = ens
+                filtered[:, :, l - (lag - shift)] = ens
         
         # step 2d: compute the re-analyzed initial condition if we have an assimilation update
-        if mda or l > (lag - shift):
+        if spin or mda or l > (lag - shift):
             ens_0 = ens_update(analysis, ens_0, trans)
             ens_0 = inflate_state(ens_0, state_infl, sys_dim, state_dim)
             
