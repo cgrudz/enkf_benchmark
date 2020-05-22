@@ -391,7 +391,6 @@ def lag_shift_smoother_classic(analysis, ens, H, obs, obs_cov, state_infl, **kwa
 
 ########################################################################################################################
 # single iteration, correlation-based lag_shift_smoother
-## NOTE: need to re-write the hybrid experiments for the revised spinup 
 
 
 def lag_shift_smoother_hybrid(analysis, ens, H, obs, obs_cov, state_infl, **kwargs):
@@ -447,36 +446,33 @@ def lag_shift_smoother_hybrid(analysis, ens, H, obs, obs_cov, state_infl, **kwar
             ens = step_model(ens, **kwargs)
 
         # step 2b: store the forecast to compute ensemble statistics before observations become available
-        if l > (lag - shift):
+        if l >= (lag - shift):
             forecast[:, :, l - (lag - shift)] = ens
 
-        # step 2c: perform the filtering step if we do multiple data assimilation (mda=True) or
-        # whenever the lag-forecast steps take us to new observations (l>(lag - shift))
-        if spin or mda or l > (lag - shift):
+        # step 2c: perform the filtering step if in spin, multiple DA (mda=True) or
+        # whenever the lag-forecast steps take us to new observations (l>=(lag - shift))
+        if spin or mda or l >= (lag - shift):
             # observation sequence starts from the time of the inital condition
             # though we do not assimilate time zero observations
             trans = transform(analysis, ens, H, obs[:, l], obs_cov)
             ens = ens_update(analysis, ens, trans)
 
-            # compute multiplicative inflation of state variables
-            ens = inflate_state(ens, state_infl, sys_dim, state_dim)
+            if spin:
+                # compute multiplicative inflation of state variables
+                ens = inflate_state(ens, state_infl, sys_dim, state_dim)
 
-            # if including an extended state of parameter values,
-            # compute multiplicative inflation of parameter values
-            if state_dim != sys_dim:
-                ens = inflate_param(ens, param_infl, sys_dim, state_dim)
+                # if including an extended state of parameter values,
+                # compute multiplicative inflation of parameter values
+                if state_dim != sys_dim:
+                    ens = inflate_param(ens, param_infl, sys_dim, state_dim)
 
-            if l > (lag - shift):
+            if l >= (lag - shift):
                 # store the filtered states alone, not mda values
                 filtered[:, :, l - (lag - shift)] = ens
         
         # step 2d: compute the re-analyzed initial condition if we have an assimilation update
-        if spin or mda or l > (lag - shift):
+        if spin or mda or l >= (lag - shift):
             ens_0 = ens_update(analysis, ens_0, trans)
-            ens_0 = inflate_state(ens_0, state_infl, sys_dim, state_dim)
-            
-            if state_dim != sys_dim:
-                ens_0 = inflate_param(ens_0, param_infl, sys_dim, state_dim)
             
     # step 3: propagate the posterior initial condition forward to the shift-forward time
     ens = copy.copy(ens_0)
@@ -493,6 +489,11 @@ def lag_shift_smoother_hybrid(analysis, ens, H, obs, obs_cov, state_infl, **kwar
         posterior[:, :, s] = ens
         for k in range(f_steps):
             ens = step_model(ens, **kwargs)
+
+    ens = inflate_state(ens, state_infl, sys_dim, state_dim)
+        
+    if state_dim != sys_dim:
+        ens = inflate_param(ens, param_infl, sys_dim, state_dim)
 
     return {'ens': ens, 'post': posterior, 'fore': forecast, 'filt': filtered}
 

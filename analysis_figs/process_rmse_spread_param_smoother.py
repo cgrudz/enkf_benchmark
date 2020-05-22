@@ -7,12 +7,12 @@ tanl = 0.05
 nanl = 40000
 burn = 5000
 #diffusion = 0
-wlk = 0.0100
+wlk = 0.0001
 shift_equal_lag = False
 
 
 method_list = ['enks', 'etks']
-version = 'hybrid'
+version = 'classic'
 data = {
         'enks_fore_rmse': np.zeros([11, 28, 21]),
         'enks_fore_spread': np.zeros([11, 28, 21]),
@@ -70,7 +70,7 @@ def process_data(fnames, shift_equal_lag):
                 f = open(name,'rb')
                 tmp = pickle.load(f)
                 f.close()
-
+                
                 ana_rmse = tmp['anal_rmse']
                 ana_spread = tmp['anal_spread']
 
@@ -83,17 +83,17 @@ def process_data(fnames, shift_equal_lag):
                 par_rmse = tmp['param_rmse']
                 par_spread = tmp['param_spread']
 
-                data[method + '_smooth_rmse'][10 - k, j, 20 - i] = np.mean(ana_rmse[burn: nanl+burn])
-                data[method + '_smooth_spread'][10 - k, j, 20 - i] = np.mean(ana_spread[burn: nanl+burn])
+                data[method + '_smooth_rmse'][10 - k, j, i] = np.mean(ana_rmse[burn: nanl+burn])
+                data[method + '_smooth_spread'][10 - k, j, i] = np.mean(ana_spread[burn: nanl+burn])
 
-                data[method + '_filter_rmse'][10 - k, j, 20 - i] = np.mean(fil_rmse[burn: nanl+burn])
-                data[method + '_filter_spread'][10 - k, j, 20 - i] = np.mean(fil_spread[burn: nanl+burn])
+                data[method + '_filter_rmse'][10 - k, j, i] = np.mean(fil_rmse[burn: nanl+burn])
+                data[method + '_filter_spread'][10 - k, j, i] = np.mean(fil_spread[burn: nanl+burn])
                 
-                data[method + '_fore_rmse'][10 - k, j, 20 - i] = np.mean(for_rmse[burn: nanl+burn])
-                data[method + '_fore_spread'][10 - k, j, 20 - i] = np.mean(for_spread[burn: nanl+burn])
+                data[method + '_fore_rmse'][10 - k, j, i] = np.mean(for_rmse[burn: nanl+burn])
+                data[method + '_fore_spread'][10 - k, j, i] = np.mean(for_spread[burn: nanl+burn])
                 
-                data[method + '_param_rmse'][10 - k, j, 20 - i] = np.mean(par_rmse[burn: nanl+burn])
-                data[method + '_param_spread'][10 - k, j, 20 - i] = np.mean(par_spread[burn: nanl+burn])
+                data[method + '_param_rmse'][10 - k, j, i] = np.mean(par_rmse[burn: nanl+burn])
+                data[method + '_param_spread'][10 - k, j, i] = np.mean(par_spread[burn: nanl+burn])
 
     smooth_rmse = np.amin(data[method + '_smooth_rmse'], axis=2)
     smooth_spread = np.zeros(np.shape(smooth_rmse))
@@ -103,6 +103,8 @@ def process_data(fnames, shift_equal_lag):
     filter_spread = np.zeros(np.shape(smooth_rmse))
     fore_rmse = np.zeros(np.shape(smooth_rmse))
     fore_spread = np.zeros(np.shape(smooth_rmse))
+    optimal_inflation = np.zeros(np.shape(smooth_rmse))
+    lag_N_ens_index = np.zeros(np.shape(smooth_rmse))
 
     # outter loop in lag value
     for k in range(11):
@@ -116,7 +118,7 @@ def process_data(fnames, shift_equal_lag):
             filter_spread[k, j] = data[method + '_filter_spread'][k, j, indx_smooth[0]]
             fore_rmse[k, j] = data[method + '_fore_rmse'][k, j, indx_smooth[0]]
             fore_spread[k, j] = data[method + '_fore_spread'][k, j, indx_smooth[0]]
-
+            optimal_inflation[k, j] = np.linspace(1.0, 1.2, 21)[indx_smooth[0]]
 
     data[method + '_smooth_rmse'] = smooth_rmse
     data[method + '_smooth_spread'] = smooth_spread 
@@ -126,6 +128,7 @@ def process_data(fnames, shift_equal_lag):
     data[method + '_fore_spread'] = fore_spread 
     data[method + '_param_rmse'] = param_rmse
     data[method + '_param_spread'] = param_spread 
+    data[method + '_optimal_inflation'] = optimal_inflation
 
 
 for method in method_list:

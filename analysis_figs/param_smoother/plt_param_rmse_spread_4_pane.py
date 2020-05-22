@@ -9,14 +9,14 @@ import glob
 import ipdb
 from matplotlib.colors import LogNorm
 
-method = 'etks'
-version = 'hybrid'
+method = 'enks'
+version = 'classic'
 tanl = 0
 nanl = 45000
 burn = 5000
-wlk = 0.0100
+wlk = 0.0001
 diffusion = 0
-stat = 'smooth'
+stat = 'fore'
 
 f = open('./processed_'+ version + '_smoother_param_rmse_spread_nanl_40000_tanl_0.05_burn_5000_wlk_' + str(wlk).ljust(6, '0') + '.txt', 'rb')
 tmp = pickle.load(f)

@@ -336,7 +336,7 @@ def classic_param(args):
 
 def hybrid_state(args):
     # Define experiment parameters
-    [time_series, method, seed, lag, shift, obs_un, obs_dim, N_ens, infl] = args
+    [time_series, method, seed, lag, shift, obs_un, obs_dim, N_ens, state_infl] = args
 
     # load the timeseries and associated parameters
     tmp = picopen(time_series)
@@ -356,6 +356,7 @@ def hybrid_state(args):
               'dx_params': [f],
               'h': h,
               'diffusion': diffusion,
+              'shift': shift,
               'mda': False
              }
 
@@ -371,16 +372,10 @@ def hybrid_state(args):
     sys_dim = len(init)
     ens = np.random.multivariate_normal(init, np.eye(sys_dim), size=N_ens).transpose()
 
-    # define the observation sequence where we project the true state into the observation space and
-    # perturb by white-in-time-and-space noise with standard deviation obs_un
-    # obs and truth indices are defined in absolute time from time zero
-    # we pad the obs sequence with 3*lag-length states to align the 
-    # posterior, filter and forecast statistics
-    obs = obs[:, : nanl + 3 * lag]
+    # obs and truth indices are defined in absolute time from time zero, we pad the obs sequence with 
+    # 2*lag-length states to align the posterior, filter and forecast statistics
+    obs = obs[:, : nanl + 3 * lag + 1]
     truth = copy.copy(obs)
-    
-    # define the observation operator here via alternating state components, for obs_dim
-    # total states observed.  Handled differently when obs_dim < 0.5*sys_dim or obs_dim > 0.5*sys_dim
     H = alternating_obs_operator(sys_dim, obs_dim)
     obs = H @ obs + obs_un * np.random.standard_normal(np.shape(obs))
     
@@ -388,30 +383,29 @@ def hybrid_state(args):
     obs_cov = obs_un**2 * np.eye(obs_dim)
 
     # create storage for the forecast and analysis statistics
-    fore_rmse = np.zeros(nanl + 2 * lag + 1)
-    filt_rmse = np.zeros(nanl + 2 * lag + 1)
-    anal_rmse = np.zeros(nanl + 2 * lag + 1)
+    fore_rmse = np.zeros(nanl + 3 * lag + 1)
+    filt_rmse = np.zeros(nanl + 3 * lag + 1)
+    anal_rmse = np.zeros(nanl + 3 * lag + 1)
     
-    fore_spread = np.zeros(nanl + 2 * lag + 1)
-    filt_spread = np.zeros(nanl + 2 * lag + 1)
-    anal_spread = np.zeros(nanl + 2 * lag + 1)
+    fore_spread = np.zeros(nanl + 3 * lag + 1)
+    filt_spread = np.zeros(nanl + 3 * lag + 1)
+    anal_spread = np.zeros(nanl + 3 * lag + 1)
 
-    # perform an initial spin for the smoothed re-analyzed  first prior estimate 
+    # perform an initial spin for the smoothed re-analyzed first prior estimate 
     # using observations over absolute times 1 to lag, resulting in ens at time 0+shift
     kwargs['spin'] = True
-    analysis = lag_shift_smoother_hybrid(method, ens, H, obs[:, 1:lag+1], obs_cov, infl, **kwargs)
+    analysis = lag_shift_smoother_hybrid(method, ens, H, obs[:, 1: lag + 1], obs_cov, state_infl, **kwargs)
     ens = analysis['ens']
 
     # reset the spin pameter for the regular assimilation cycle
     kwargs['spin'] = False
     
     # we will run through nanl + 2 * lag total analyses but discard the last-lag forecast values and
-    # first-lag and second-lag posterior values so that the statistics align on the same time points
-    # after the spin
-    for i in range(shift, nanl + lag, shift):
+    # first-lag posterior values so that the statistics align on the same time points after the spin
+    for i in range(shift + 1, nanl + lag + 2, shift):
         # perform assimilation of the DAW
         # we use the observation window from current time +1 to current time +lag
-        analysis = lag_shift_smoother_hybrid(method, ens, H, obs[:, i + 1: i + lag + 1], obs_cov, infl, **kwargs)
+        analysis = lag_shift_smoother_hybrid(method, ens, H, obs[:, i: i + lag], obs_cov, state_infl, **kwargs)
         ens = analysis['ens']
         fore = analysis['fore']
         filt = analysis['filt']
@@ -422,18 +416,19 @@ def hybrid_state(args):
             # forward index the true state by 1, because the sequence starts at time zero for which there is no
             # observation
             # indices for the forecast, filter, analysis and truth arrays are in absolute time, not relative
-            #fore_rmse[i + lag + 1 - shift + j], fore_spread[] = analyze_ensemble(fore[:, :, j], 
-            #                                                                             truth[:, i + lag + j + 1])
-            filt_rmse[i + j + 1], filt_spread[i + j + 1] = analyze_ensemble(filt[:, :, j], truth[:, i + j + 1])
-            anal_rmse[i + j], anal_spread[i + j] = analyze_ensemble(post[:, :, j], truth[:, i + j])
+            fore_rmse[i + lag - shift + j], fore_spread[i + lag - shift + j] = analyze_ensemble(fore[:, :, j], 
+                                                                                    truth[:, i + lag - shift + j])
+            filt_rmse[i + lag - shift + j], filt_spread[i + lag - shift + j] = analyze_ensemble(filt[:, :, j], 
+                                                                                    truth[:, i + lag - shift + j])
+            anal_rmse[i - 1 + j], anal_spread[i - 1 + j] = analyze_ensemble(post[:, :, j], truth[:, i - 1 + j])
 
     # cut the statistics so that they align on the same time points
-    fore_rmse = fore_rmse[lag: lag + nanl]
-    fore_spread = fore_spread[lag: lag + nanl]
-    filt_rmse = filt_rmse[lag: lag + nanl]
-    filt_spread = filt_spread[lag: lag + nanl]
-    anal_rmse = anal_rmse[lag: lag + nanl]
-    anal_spread = anal_spread[lag: lag + nanl]
+    fore_rmse = fore_rmse[lag + 1: lag + 1 + nanl]
+    fore_spread = fore_spread[lag + 1: lag + 1 + nanl]
+    filt_rmse = filt_rmse[lag + 1: lag + 1 + nanl]
+    filt_spread = filt_spread[lag + 1: lag + 1 + nanl]
+    anal_rmse = anal_rmse[lag + 1: lag + 1 + nanl]
+    anal_spread = anal_spread[lag + 1: lag + 1 + nanl]
 
     data = {
             'fore_rmse': fore_rmse,
@@ -454,7 +449,7 @@ def hybrid_state(args):
             'shift': shift,
             'h': h,
             'N_ens': N_ens, 
-            'state_infl': np.around(infl, 2)
+            'state_infl': np.around(state_infl, 2)
             }
     
     fname = './data/' + method + '_hybrid/' + method + '_hybrid_smoother_l96_state_benchmark_seed_' +\
@@ -462,7 +457,7 @@ def hybrid_state(args):
             '_obs_dim_' + str(obs_dim) + '_obs_un_' + str(obs_un).ljust(4, '0') + '_nanl_' +\
             str(nanl).zfill(3) + '_tanl_' + str(tanl).zfill(3) + '_h_' + str(h).ljust(4, '0') + \
             '_lag_' + str(lag).zfill(3) + '_shift_' + str(shift).zfill(3) +\
-            '_N_ens_' + str(N_ens).zfill(3) + '_state_inflation_' + str(np.around(infl, 2)).ljust(4, '0') + '.txt'
+            '_N_ens_' + str(N_ens).zfill(3) + '_state_inflation_' + str(np.around(state_infl, 2)).ljust(4, '0') + '.txt'
 
     picwrite(data, fname)
     return(args)
@@ -526,11 +521,9 @@ def hybrid_param(args):
     # defined the extended state ensemble
     ens = np.concatenate([ens, param_ens], axis=0)
 
-    # define the observation sequence where we project the true state into the observation space and
-    # perturb by white-in-time-and-space noise with standard deviation obs_un
-    # NOTE: we will include obs at time zero and pad the obs sequence with lag on front and back
-    # to align the analysis and forecast statistics
-    obs = obs[:, :nanl + 2 * lag + 1]
+    # obs and truth indices are defined in absolute time from time zero, we pad the obs sequence with 
+    # 2*lag-length states to align the posterior, filter and forecast statistics
+    obs = obs[:, :nanl + 3 * lag + 1]
     truth = copy.copy(obs)
     
     # define the observation operator for the dynamic state variables -- note, the param_truth is not part of the
@@ -545,22 +538,31 @@ def hybrid_param(args):
     H = alternating_obs_operator(sys_dim, obs_dim, **kwargs)
 
     # create storage for the forecast and analysis statistics
-    fore_rmse = np.zeros(nanl + 2 * lag + 1)
-    filt_rmse = np.zeros(nanl + 2 * lag + 1)
-    anal_rmse = np.zeros(nanl + 2 * lag + 1)
-    param_rmse = np.zeros(nanl + 2 * lag + 1)
+    fore_rmse = np.zeros(nanl + 3 * lag + 1)
+    filt_rmse = np.zeros(nanl + 3 * lag + 1)
+    anal_rmse = np.zeros(nanl + 3 * lag + 1)
+    param_rmse = np.zeros(nanl + 3 * lag + 1)
     
-    fore_spread = np.zeros(nanl + 2 * lag + 1)
-    filt_spread = np.zeros(nanl + 2 * lag + 1)
-    anal_spread = np.zeros(nanl + 2 * lag + 1)
-    param_spread = np.zeros(nanl + 2 * lag + 1)
+    fore_spread = np.zeros(nanl + 3 * lag + 1)
+    filt_spread = np.zeros(nanl + 3 * lag + 1)
+    anal_spread = np.zeros(nanl + 3 * lag + 1)
+    param_spread = np.zeros(nanl + 3 * lag + 1)
 
-    # we will run through nanl + shift total analyses but discard the last-shift forecast values and
-    # first-shift and second-shift posterior values at the end so that the statistics align on the same time points
-    for i in range(lag, nanl + 2 * lag + 1, shift):
+    # perform an initial spin for the smoothed re-analyzed first prior estimate 
+    # using observations over absolute times 1 to lag, resulting in ens at time 0+shift
+    kwargs['spin'] = True
+    analysis = lag_shift_smoother_hybrid(method, ens, H, obs[:, 1: lag + 1], obs_cov, state_infl, **kwargs)
+    ens = analysis['ens']
+
+    # reset the spin pameter for the regular assimilation cycle
+    kwargs['spin'] = False
+    
+    # we will run through nanl + 2 * lag total analyses but discard the last-lag forecast values and
+    # first-lag posterior values so that the statistics align on the same time points after the spin
+    for i in range(shift + 1, nanl +  lag + 2, shift):
         # perform assimilation of the DAW
         # we use the observation windo from time zero to time lag
-        analysis = lag_shift_smoother_hybrid(method, ens, H, obs[:, i-lag: i+1], obs_cov, state_infl, **kwargs)
+        analysis = lag_shift_smoother_hybrid(method, ens, H, obs[:, i: i + lag], obs_cov, state_infl, **kwargs)
         ens = analysis['ens']
         fore = analysis['fore']
         filt = analysis['filt']
@@ -571,28 +573,28 @@ def hybrid_param(args):
             # forward index the true state by 1, because the sequence starts at time zero for which there is no
             # observation
             # indices for the forecast, filter, analysis and truth arrays are in absolute time, not relative
-            fore_rmse[i - shift + j + 1], fore_spread[i - shift + j + 1] = analyze_ensemble(fore[:state_dim, :, j], 
-                                                                                    truth[:, i - shift + j + 1])
+            fore_rmse[i + lag - shift + j], fore_spread[i + lag - shift + j] = analyze_ensemble(fore[:state_dim, :, j], 
+                                                                                    truth[:, i + lag - shift + j])
             
-            filt_rmse[i - shift + j + 1], filt_spread[i - shift + j + 1] = analyze_ensemble(filt[:state_dim, :, j], 
-                                                                                    truth[:, i - shift + j + 1])
+            filt_rmse[i + lag - shift + j], filt_spread[i + lag - shift + j] = analyze_ensemble(filt[:state_dim, :, j], 
+                                                                                    truth[:, i + lag - shift + j])
             
-            anal_rmse[i - lag + j], anal_spread[i - lag + j] = analyze_ensemble(post[:state_dim, :, j], 
-                                                                                truth[:, i - lag  + j])
+            anal_rmse[i - 1 + j], anal_spread[i - 1 + j] = analyze_ensemble(post[:state_dim, :, j], 
+                                                                                truth[:, i - 1 + j])
 
-            param_rmse[i - lag + j], param_spread[i - lag + j] = analyze_ensemble_parameters(post[state_dim:, :, j], 
+            param_rmse[i - 1 + j], param_spread[i - 1 + j] = analyze_ensemble_parameters(post[state_dim:, :, j], 
                                                                                 param_truth)
 
             
     # cut the statistics so that they align on the same time points
-    fore_rmse = fore_rmse[lag: lag + nanl]
-    fore_spread = fore_spread[lag: lag + nanl]
-    filt_rmse = filt_rmse[lag: lag + nanl]
-    filt_spread = filt_spread[lag: lag + nanl]
-    anal_rmse = anal_rmse[lag: lag + nanl]
-    anal_spread = anal_spread[lag: lag + nanl]
-    param_rmse = param_rmse[lag: lag + nanl]
-    param_spread = param_spread[lag: lag + nanl]
+    fore_rmse = fore_rmse[lag + 1: lag + 1 + nanl]
+    fore_spread = fore_spread[lag + 1: lag + 1 + nanl]
+    filt_rmse = filt_rmse[lag + 1: lag + 1 + nanl]
+    filt_spread = filt_spread[lag + 1: lag + 1 + nanl]
+    anal_rmse = anal_rmse[lag + 1: lag + 1 + nanl]
+    anal_spread = anal_spread[lag + 1: lag + 1 + nanl]
+    param_rmse = param_rmse[lag + 1: lag + 1 + nanl]
+    param_spread = param_spread[lag + 1: lag + 1 + nanl]
 
     data = {
             'fore_rmse': fore_rmse,
