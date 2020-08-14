@@ -6,7 +6,6 @@ import ipdb
 ########################################################################################################################
 # Main methods, debugged and validated
 ########################################################################################################################
-
 # alternating id obs
 
 def alternating_obs_operator(sys_dim, obs_dim, **kwargs):
@@ -68,11 +67,12 @@ def analyze_ensemble(ens, truth):
     # compute the RMSE of the ensemble mean
     rmse = np.sqrt( np.mean( (truth - mean)**2 ) )
 
-    # we compute the spread as in whitaker & louge 98 by the standard deviation 
-    # of the mean square deviation of the ensemble
+    # we compute the spread as in whitaker & louge 98 by the standard deviation of the mean square 
+    # deviation of each member from the ensemble mean 
     spread = np.sqrt( ( 1 / (N_ens - 1) ) * np.sum(np.mean( (mean - ens.transpose())**2, axis=1)))
 
     return [rmse, spread]
+
 
 ########################################################################################################################
 
@@ -415,12 +415,18 @@ def lag_shift_smoother_hybrid(analysis, ens, H, obs, obs_cov, state_infl, **kwar
     step_model = kwargs['step_model']
     shift = kwargs['shift']
     
-    # multiple data assimilation to be implemented in a future version
-    mda = kwargs['mda']
     # spin to be used on the first lag-assimilations -- this makes the smoothed time-zero re-analized prior
     # the first initial condition for the future iterations regardless of sda or mda settings
     spin = kwargs['spin']
     
+    # multiple data assimilation (mda) is optional, read as boolean variable
+    mda = kwargs['mda']
+    if mda:
+        obs_weights = kwargs['obs_weights']
+    
+    else:
+        obs_weights = np.ones([lag])
+
     # optional parameter estimation
     if 'state_dim' in kwargs:
         state_dim = kwargs['state_dim']
@@ -454,7 +460,7 @@ def lag_shift_smoother_hybrid(analysis, ens, H, obs, obs_cov, state_infl, **kwar
         if spin or mda or l >= (lag - shift):
             # observation sequence starts from the time of the inital condition
             # though we do not assimilate time zero observations
-            trans = transform(analysis, ens, H, obs[:, l], obs_cov)
+            trans = transform(analysis, ens, H, obs[:, l], obs_cov * obs_weights[l])
             ens = ens_update(analysis, ens, trans)
 
             if spin:

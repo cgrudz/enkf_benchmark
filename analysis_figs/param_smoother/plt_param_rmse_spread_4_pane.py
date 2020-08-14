@@ -9,16 +9,16 @@ import glob
 import ipdb
 from matplotlib.colors import LogNorm
 
-method = 'enks'
+method = 'etks'
 version = 'classic'
 tanl = 0
 nanl = 45000
 burn = 5000
-wlk = 0.0001
-diffusion = 0
-stat = 'fore'
+wlk = 0.0100
+diff = 0.1
+stat = 'filter'
 
-f = open('./processed_'+ version + '_smoother_param_rmse_spread_nanl_40000_tanl_0.05_burn_5000_wlk_' + str(wlk).ljust(6, '0') + '.txt', 'rb')
+f = open('./processed_'+ version + '_smoother_param_rmse_spread_nanl_40000_tanl_0.05_burn_5000_wlk_' + str(wlk).ljust(6, '0') + '_diff_' + str(diff)+ '.txt', 'rb')
 tmp = pickle.load(f)
 f.close()
 
@@ -29,13 +29,14 @@ param_rmse = tmp[method + '_param_rmse']
 param_spread = tmp[method + '_param_spread']
 
 fig = plt.figure()
-ax2 = fig.add_axes([.935, .520, .01, .427])
-ax5 = fig.add_axes([.935, .080, .01, .427])
 
-ax1 = fig.add_axes([.504, .08, .425, .427])
 ax0 = fig.add_axes([.070, .08, .425, .427])
-ax4 = fig.add_axes([.504, .520, .425, .427])
+ax1 = fig.add_axes([.504, .08, .425, .427])
+ax5 = fig.add_axes([.935, .08, .01, .427])
+
 ax3 = fig.add_axes([.070, .520, .425, .427])
+ax4 = fig.add_axes([.504, .520, .425, .427])
+ax2 = fig.add_axes([.935, .520, .01, .427])
 
 
 color_map_state = sns.color_palette("husl", 101)
@@ -57,8 +58,7 @@ ax5.tick_params(
 ax1.tick_params(
         labelsize=20,
         labelleft=False,
-        left=False,
-        right=True)
+        left=False)
 
 ax0.tick_params(
         labelsize=20)
@@ -96,18 +96,21 @@ for i in range(len(y_vals)):
 
 y_labs = y_labs[::-1]
 
-ax1.set_xticks(range(0,29,3))
-ax0.set_xticks(range(0,29,3))
-ax1.set_xticklabels(x_labs, ha='left')
-ax0.set_xticklabels(x_labs, ha='left')
-ax1.set_ylim([10,0])
-ax0.set_ylim([10,0])
-ax0.set_yticks(range(0,11))
+ax1.set_xticks(np.arange(0,29,3) + 0.5)
+ax0.set_xticks(np.arange(0,29,3) + 0.5)
+ax3.set_xticks(np.arange(0,29,3) + 0.5)
+ax4.set_xticks(np.arange(0,29,3) + 0.5)
+ax1.set_xticklabels(x_labs, ha='center')
+ax0.set_xticklabels(x_labs, ha='center')
+ax0.set_ylim([11,0])
+ax1.set_ylim([11,0])
+ax3.set_ylim([11,0])
+ax4.set_ylim([11,0])
+ax0.set_yticks(np.arange(0,11) + 0.5)
 ax0.set_yticklabels(y_labs, va='center')
-ax3.set_yticks(range(0,11))
+ax3.set_yticks(np.arange(0,11) + 0.5)
 ax3.set_yticklabels(y_labs, va='center')
-ax1.set_yticks(range(0,11))
-#ax1.set_yticklabels(y_labs, va='top', rotation='90')
+ax1.set_yticks(np.arange(0,11) + 0.5)
 if stat == 'smooth':
     stat = 'Smoother'
 
@@ -117,6 +120,12 @@ elif stat == 'filter':
 elif stat == 'fore':
     stat = 'Forecast'
 
+if method == 'enks':
+    method = 'EnKS'
+
+elif method == 'etks':
+    method = 'ETKS'
+
 plt.figtext(.2, .96, stat + ' RMSE', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.8, .96, stat+ ' spread', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.03, .7335, r'State vector', horizontalalignment='left', verticalalignment='center', fontsize=22, rotation='90')
@@ -124,8 +133,9 @@ plt.figtext(.03, .2935, r'F parameter', horizontalalignment='left', verticalalig
 plt.figtext(.02, .52, r'Lag length', horizontalalignment='right', verticalalignment='center', fontsize=22, rotation='90')
 plt.figtext(.2, .02, r'Smoother RMSE', horizontalalignment='center', verticalalignment='center', fontsize=22)
 plt.figtext(.8, .02, r'Smoother spread', horizontalalignment='center', verticalalignment='center', fontsize=22)
-plt.figtext(.50, .02, r'Number of samples', horizontalalignment='center', verticalalignment='center', fontsize=22)
-plt.figtext(.5, .965, method + ' ' + version + ' Param wlk std ' + str(wlk), horizontalalignment='center', verticalalignment='bottom', fontsize=24)
+plt.figtext(.50, .02, r'Ensemble size', horizontalalignment='center', verticalalignment='center', fontsize=22)
+plt.figtext(.5, .965, method + ' ' + version + ' - parameter walk std ' + str(wlk) + ' diffusion ' + str(diff),
+        horizontalalignment='center', verticalalignment='bottom', fontsize=24)
 
 
 plt.show()

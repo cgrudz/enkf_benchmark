@@ -13,9 +13,9 @@ tanl = 0.05
 obs_un = 1.0
 lag = 5
 wlks = [0.0000, 0.0001, 0.0010, 0.0100]
-stat = 'fore'
+stat = 'smooth'
 method = 'etks'
-version = 'classic'
+version = 'hybrid'
 markerlist = ['o', 'v', '>', 'X']
 
 fig = plt.figure()
@@ -52,14 +52,14 @@ ax0.tick_params(
         labelsize=20)
 
 if stat == 'param':
-    ax1.set_ylim([10e-20,1.0])
-    ax0.set_ylim([10e-6,1.0])
+    ax1.set_ylim([10e-6,0.25])
+    ax0.set_ylim([10e-6,0.25])
     ax0.set_yscale('log')
     ax1.set_yscale('log')
 
 else:
-    ax1.set_ylim([0.05,0.5])
-    ax0.set_ylim([0.05,0.5])
+    ax1.set_ylim([0.01,0.25])
+    ax0.set_ylim([0.01,0.25])
 
 ax1.set_xlim([13, 42])
 ax0.set_xlim([13, 42])

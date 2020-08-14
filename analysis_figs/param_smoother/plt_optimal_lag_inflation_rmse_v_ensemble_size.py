@@ -12,8 +12,8 @@ import math
 tanl = 0.05
 obs_un = 1.0
 wlk = 0.0100
-stat = 'param'
-methods = ['enks','etks']
+stat = 'fore'
+methods = ['enks', 'etks']
 versions = ['classic', 'hybrid']
 markerlist = ['o', 'v', '>', 'X', 'd']
 
@@ -34,6 +34,7 @@ def find_optimal_values(data, method, stat):
 
     for i in range(len(rmse_min_vals)):
         if math.isnan(rmse_min_vals[i]):
+            rmse_vals[i] = math.nan
             spread_vals[i] = math.nan
             
         else:
@@ -52,6 +53,10 @@ for j in range(len(versions)):
     for i in range(len(methods)):
         version = versions[j]
         method = methods[i]
+
+        if version == 'hybrid':
+            if method == 'enks':
+                continue
         
         f = open('processed_' + version + '_smoother_param_rmse_spread_nanl_40000_tanl_0.05_burn_5000_wlk_' + str(wlk).ljust(6,'0') + '.txt', 'rb')
         data = pickle.load(f)
@@ -76,14 +81,14 @@ ax0.tick_params(
         labelsize=20)
 
 if stat == 'param':
-    ax1.set_ylim([10e-20,1.0])
+    ax1.set_ylim([10e-6,1.0])
     ax0.set_ylim([10e-6,1.0])
     ax0.set_yscale('log')
     ax1.set_yscale('log')
 
 else:
-    ax1.set_ylim([0.05,0.5])
-    ax0.set_ylim([0.05,0.5])
+    ax1.set_ylim([0.01,0.25])
+    ax0.set_ylim([0.01,0.25])
 
 ax1.set_xlim([13.5, 42.5])
 ax0.set_xlim([13.5, 42.5])

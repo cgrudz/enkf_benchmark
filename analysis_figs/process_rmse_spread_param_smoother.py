@@ -6,12 +6,12 @@ import ipdb
 tanl = 0.05
 nanl = 40000
 burn = 5000
-#diffusion = 0
-wlk = 0.0001
+diff = 0.1
+wlk = 0.0000
 shift_equal_lag = False
 
 
-method_list = ['enks', 'etks']
+method_list = ['etks']
 version = 'classic'
 data = {
         'enks_fore_rmse': np.zeros([11, 28, 21]),
@@ -132,12 +132,14 @@ def process_data(fnames, shift_equal_lag):
 
 
 for method in method_list:
-    fnames = sorted(glob.glob('../smoother_param_data/' + method + '_' + version + '/*'+'_wlk_' + str(wlk).ljust(6,'0') + '*' ))
+    fnames = sorted(glob.glob('../smoother_param_data/diff_' + str(diff) + '/' + method + '_' + version +  '/*'+'_wlk_' + str(wlk).ljust(6,'0') + '*' ))
+    ipdb.set_trace()
     process_data(fnames, shift_equal_lag)
 
 
 f = open('./processed_' + version + '_smoother_param_rmse_spread_nanl_' + str(nanl) +\
-         '_tanl_' + str(tanl) + '_burn_' + str(burn) + '_wlk_' + str(wlk).ljust(6,'0') + '.txt', 'wb')
+         '_tanl_' + str(tanl) + '_burn_' + str(burn) + '_wlk_' + str(wlk).ljust(6,'0') +\
+         '_diff_' + str(diff) + '.txt', 'wb')
 
 pickle.dump(data, f)
 f.close()

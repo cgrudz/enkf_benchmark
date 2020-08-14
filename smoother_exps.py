@@ -357,7 +357,6 @@ def hybrid_state(args):
               'h': h,
               'diffusion': diffusion,
               'shift': shift,
-              'mda': False
              }
 
     # number of analyses
@@ -391,6 +390,14 @@ def hybrid_state(args):
     filt_spread = np.zeros(nanl + 3 * lag + 1)
     anal_spread = np.zeros(nanl + 3 * lag + 1)
 
+    # set multiple data assimilation (MDA) boolean and supply weights for spin if true
+    mda = True
+    kwargs['mda'] = mda
+
+    # spin weights are supplied to assimilate each observation fully over the shifting
+    # MDA weights are multiplied by the observation error covariance matrix
+    kwargs['obs_weights'] =  np.arange(1, lag + 1)
+
     # perform an initial spin for the smoothed re-analyzed first prior estimate 
     # using observations over absolute times 1 to lag, resulting in ens at time 0+shift
     kwargs['spin'] = True
@@ -405,6 +412,15 @@ def hybrid_state(args):
     for i in range(shift + 1, nanl + lag + 2, shift):
         # perform assimilation of the DAW
         # we use the observation window from current time +1 to current time +lag
+        if mda:
+            # if still processing observations from the spin cycle, deal with special weights
+            if i <= lag:
+                kwargs['obs_weights'] = np.concatenate([np.arange(i, lag + 1), np.ones(i-1) * lag], axis=0)
+
+            # otherwise equal weights
+            else:
+                kwargs['obs_weights'] = np.ones([lag]) * lag
+
         analysis = lag_shift_smoother_hybrid(method, ens, H, obs[:, i: i + lag], obs_cov, state_infl, **kwargs)
         ens = analysis['ens']
         fore = analysis['fore']
@@ -452,7 +468,7 @@ def hybrid_state(args):
             'state_infl': np.around(state_infl, 2)
             }
     
-    fname = './data/' + method + '_hybrid/' + method + '_hybrid_smoother_l96_state_benchmark_seed_' +\
+    fname = './data/' + method + '_hybrid/' + method + '_hybrid_smoother_l96_state_benchmark_mda_' + str(mda) + '_seed_' +\
             str(seed).zfill(2) + '_diffusion_' + str(float(diffusion)).ljust(4, '0') + '_sys_dim_' + str(sys_dim) +\
             '_obs_dim_' + str(obs_dim) + '_obs_un_' + str(obs_un).ljust(4, '0') + '_nanl_' +\
             str(nanl).zfill(3) + '_tanl_' + str(tanl).zfill(3) + '_h_' + str(h).ljust(4, '0') + \

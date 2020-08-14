@@ -2,11 +2,9 @@ import numpy as np
 import copy
 import ipdb
 
-# Module containing integration schemes for Lorenz 96
-
 ########################################################################################################################
-# Non-linear model vectorized for ensembles
-
+# Module containing integration schemes for Lorenz 96
+########################################################################################################################
 
 def l96(x, dx_params):
     """"This describes the derivative for the non-linear Lorenz 96 Model of arbitrary dimension n.
@@ -20,13 +18,12 @@ def l96(x, dx_params):
     x_m_2 = np.concatenate([x[-2:, :], x[:-2, :]])
     x_m_1 = np.concatenate([x[-1:, :], x[:-1, :]])
     x_p_1 = np.concatenate([x[1:,:], np.reshape(x[0,:], [1, len(x[0, :])])], axis=0)
-    
+
     return (x_p_1-x_m_2)*x_m_1 - x + f
 
 
 ########################################################################################################################
 # Jacobian
-
 
 def l96_jacobian(x, dx_params):
     """"This computes the Jacobian of the Lorenz 96, for arbitrary dimension, equation about the point x."""
@@ -49,13 +46,11 @@ def l96_jacobian(x, dx_params):
 
 
 ########################################################################################################################
-# Stochastic Runge-Kutta, 4 step
-# This is the four step runge kutta scheme for stratonovich calculus, described in Hansen and Penland 2005
-# The rule has strong convergence order 1.0 for generic SDEs and order 4.0 for ODEs
 
 def rk4_step(x, **kwargs):
     """One step of integration rule for l96 4 stage Runge-Kutta as discussed in Grudzien et al. 2020
-
+    
+    The rule has strong convergence order 1.0 for generic SDEs and order 4.0 for ODEs
     Arguments are given as
     x          -- array with ensemble of possibly extended state varaibles including parameter values
     kwargs     -- this should include dx_dt, the paramters for the dx_dt and optional arguments
@@ -123,12 +118,12 @@ def rk4_step(x, **kwargs):
             # Define the four terms of the RK scheme recursively to evolve the state
             # components alone
             k1[:, [i]] = dx_dt(x[:state_dim, [i]], params_i) * h + diffusion * W[:, [i]]
-            k2[:, [i]] = dx_dt(x[:state_dim, [i]] + .5 * k1[:, [i]], params_i) * h + diffusion * W[:, [i]]
-            k3[:, [i]] = dx_dt(x[:state_dim, [i]] + .5 * k2[:, [i]], params_i) * h + diffusion * W[:, [i]]
+            k2[:, [i]] = dx_dt(x[:state_dim, [i]] + 0.5 * k1[:, [i]], params_i) * h + diffusion * W[:, [i]]
+            k3[:, [i]] = dx_dt(x[:state_dim, [i]] + 0.5 * k2[:, [i]], params_i) * h + diffusion * W[:, [i]]
             k4[:, [i]] = dx_dt(x[:state_dim, [i]] + k3[:, [i]], params_i) * h + diffusion * W[:, [i]]
             
             # compute the update to the dynamic variables
-            x_step = x[:state_dim, [i]]+ (1 / 6) * (k1[:, [i]] + 2*k2[:, [i]] + 2*k3[:, [i]] + k4[:, [i]])
+            x_step = x[:state_dim, [i]]+ (1.0 / 6.0) * (k1[:, [i]] + 2.0*k2[:, [i]] + 2.0*k3[:, [i]] + k4[:, [i]])
             
             # repack the parameter in the extended state
             x[:state_dim, [i]] = x_step  
@@ -136,12 +131,12 @@ def rk4_step(x, **kwargs):
     else:
         # Define the four terms of the RK scheme recursively
         k1 = dx_dt(x, params) * h + diffusion * W
-        k2 = dx_dt(x + .5 * k1, params) * h + diffusion * W
-        k3 = dx_dt(x + .5 * k2, params) * h + diffusion * W
+        k2 = dx_dt(x + 0.5 * k1, params) * h + diffusion * W
+        k3 = dx_dt(x + 0.5 * k2, params) * h + diffusion * W
         k4 = dx_dt(x + k3, params) * h + diffusion * W
 
         # compute the update to the dynamic variables
-        x = x + (1 / 6) * (k1 + 2*k2 + 2*k3 + k4)
+        x = x + (1.0 / 6.0) * (k1 + 2.0*k2 + 2.0*k3 + k4)
     
     return x
 
@@ -268,7 +263,7 @@ def l96s_tay2_step(x, **kwargs):
                 C[r-1, k-1] = (r / (r**2 - k**2)) * ((1/k) * zeta[l, r-1] * zeta[j, k-1] + (1/r) * eta[l, r-1] * eta[j, k-1] )
 
         # we return the sum of all values scaled by -1/2pi^2
-        return .5 * np.pi**(-2) * np.sum(C)
+        return -.5 * np.pi**(-2) * np.sum(C)
 
     def Psi(l, j):
         # psi will be a generic function of the indicies l and j, we will define psi plus and psi minus via this
@@ -294,7 +289,7 @@ def l96s_tay2_step(x, **kwargs):
 def l96_em_sde(x, params):
     """This will propagate the state x one step forward by euler-murayama
 
-    step size is h and the weiner process is assumed to have a scalar diffusion coefficient"""
+    step size is h and the Wiener process is assumed to have a scalar diffusion coefficient"""
     
     # unpack the arguments for the integration step
     [h, f, diffusion] = params

@@ -12,7 +12,7 @@ import math
 tanl = 0.05
 obs_un = 1.0
 ens = 25
-lag = 5
+lag = 6
 wlks = [0.0000, 0.0001, 0.0010, 0.0100]
 stat = 'smooth'
 methods = ['enks','etks']
@@ -65,8 +65,8 @@ if stat == 'param':
     ax1.set_yscale('log')
 
 else:
-    ax1.set_ylim([0.05,0.5])
-    ax0.set_ylim([0.05,0.5])
+    ax1.set_ylim([0.01,0.25])
+    ax0.set_ylim([0.01,0.25])
 
 ax0.tick_params(
         labelsize=22)

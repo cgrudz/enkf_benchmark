@@ -26,16 +26,16 @@ time_series = './data/timeseries_obs/timeseries_l96_seed_0_rk4_step_sys_dim_40_h
 ########################################################################################################################
 # Filters
 ########################################################################################################################
-## filter_state single run for degbugging, arguments are
-## [time_series, method, seed, obs_un, obs_dim, N_ens, infl] = args
+# filter_state single run for degbugging, arguments are
+# [time_series, method, seed, obs_un, obs_dim, N_ens, infl] = args
 #
-#args = [time_series, 'etkf', 0, 1.0, 40, 25, 1.10]
-#print(filter_state(args))
+args = [time_series, 'enkf', 0, 1.0, 40, 25, 1.12]
+print(filter_state(args))
 ########################################################################################################################
 ## filter_param single run for degbugging, arguments are
 ## [time_series, method, seed, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl] = args
 #
-#args = [time_series, 'etkf', 0, 1.0, 40, 0.03, 0.00, 25, 1.10, 1.0]
+#args = [time_series, 'enkf', 0, 1.0, 40, 0.03, 0.0010, 25, 1.12, 1.0]
 #print(filter_param(args))
 ########################################################################################################################
 
@@ -61,14 +61,14 @@ time_series = './data/timeseries_obs/timeseries_l96_seed_0_rk4_step_sys_dim_40_h
 # hybrid_state single run for degbugging, arguments are
 # [time_series, method, seed, lag, shift, obs_un, obs_dim, N_ens, infl] = args
 #
-#args = [time_series, 'etks', 0, 56, 1, 1.0, 40, 25, 1.01]
+#args = [time_series, 'etks', 0, 31, 1, 1.0, 40, 25, 1.01]
 #print(hybrid_state(args))
 ########################################################################################################################
-## hybrid_param single run for debugging, arguments are
-## [time_series, method, seed, lag, shift, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl] = args
+# hybrid_param single run for debugging, arguments are
+# [time_series, method, seed, lag, shift, obs_un, obs_dim, param_err, param_wlk, N_ens, state_infl, param_infl] = args
 #
-args = [time_series, 'etks', 0, 26, 1, 1.0, 40, 0.03, 0.01, 25, 1.01, 1.0] 
-print(hybrid_param(args))
+#args = [time_series, 'etks', 0, 26, 1, 1.0, 40, 0.03, 0.01, 25, 1.01, 1.0] 
+#print(hybrid_param(args))
 ########################################################################################################################
 
 

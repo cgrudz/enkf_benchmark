@@ -12,8 +12,8 @@ import math
 tanl = 0.05
 obs_un = 1.0
 ens = 25
-wlk = 0.0100
-stat = 'param'
+wlk = 0.0000
+stat = 'smooth'
 methods = ['enks','etks']
 versions = ['classic', 'hybrid']
 markerlist = ['o', 'v', '>', 'X', 'd']
@@ -34,8 +34,8 @@ for j in range(len(versions)):
         data = pickle.load(f)
         f.close()
         
-        rmse = data[method + '_' + stat + '_rmse'][:, ens - 14]
-        spread = data[method + '_' + stat + '_spread'][:, ens - 14]
+        rmse = data[method + '_' + stat + '_rmse'][::-1, ens - 14]
+        spread = data[method + '_' + stat + '_spread'][::-1, ens - 14]
         
         l, = ax0.plot(range(1, 52, 5), rmse, marker=markerlist[i+j*2], linewidth=2, markersize=10)
         ax1.plot(range(1, 52, 5), spread, marker=markerlist[i+j*2], linewidth=2, markersize=10)
@@ -60,8 +60,8 @@ if stat == 'param':
     ax1.set_yscale('log')
 
 else:
-    ax1.set_ylim([0.05,0.5])
-    ax0.set_ylim([0.05,0.5])
+    ax1.set_ylim([0.01,0.25])
+    ax0.set_ylim([0.01,0.25])
 
 ax1.set_xlim([0.5, 51.5])
 ax0.set_xlim([0.5, 51.5])

@@ -15,7 +15,7 @@ ens = 25
 wlks = [0.0000, 0.0001, 0.0010, 0.0100]
 stat = 'param'
 method = 'etks'
-version = 'classic'
+version = 'hybrid'
 markerlist = ['o', 'v', '>', 'X']
 
 fig = plt.figure()
@@ -32,8 +32,8 @@ for j in range(len(wlks)):
     data = pickle.load(f)
     f.close()
     
-    rmse = data[method + '_' + stat + '_rmse'][:, ens - 14]
-    spread = data[method + '_' + stat + '_spread'][:, ens - 14]
+    rmse = data[method + '_' + stat + '_rmse'][::-1, ens - 14]
+    spread = data[method + '_' + stat + '_spread'][::-1, ens - 14]
     
     l, = ax0.plot(range(1, 52, 5), rmse, marker=markerlist[j], linewidth=2, markersize=10)
     ax1.plot(range(1, 52, 5), spread, marker=markerlist[j], linewidth=2, markersize=10)
@@ -52,14 +52,14 @@ ax0.tick_params(
         labelsize=20)
 
 if stat == 'param':
-    ax1.set_ylim([10e-20,1.0])
-    ax0.set_ylim([10e-6,1.0])
+    ax1.set_ylim([10e-6,0.25])
+    ax0.set_ylim([10e-6,0.25])
     ax0.set_yscale('log')
     ax1.set_yscale('log')
 
 else:
-    ax1.set_ylim([0.05,0.5])
-    ax0.set_ylim([0.05,0.5])
+    ax1.set_ylim([0.01,0.25])
+    ax0.set_ylim([0.01,0.25])
 
 ax1.set_xlim([0, 52])
 ax0.set_xlim([0, 52])
