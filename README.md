@@ -19,5 +19,5 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should be able to access a copy of the license in the following
-[License.md](https://github.com/cgrudz/enkf_benchmark/LICENSE.md).
+[License.md](https://github.com/cgrudz/enkf_benchmark/blob/master/LICENSE.md).
 If not, see <https://www.gnu.org/licenses/>.
